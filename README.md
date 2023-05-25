@@ -11,8 +11,13 @@ library(hablar)
 library(data.table)
 library(stringr)
 
+
+
+
+
+
 # Steps
-## Createa new folder & put the following 11 or 12 files/scripts inside it
+## Step 1: Createa new folder & put the following 11 or 12 files/scripts inside it
 1. PPMI_Wide_to_Cleaned.R
 2. PPMI_Wide_to_Cleaned_Imaging.R
 3. PPMI_Cleaned_to_Processed.R
@@ -28,7 +33,12 @@ library(stringr)
         if you want to add CNO, create a file with unique patient IDs as column 1 and CNO numbers as column 2
         if CNO is not needed, comment the "Add CNOs" section out in the PPMI_Cleaned_to_Processed.R file
 
-## Run PPMI_Wrapper.R
+## Step 2: Run PPMI_Wrapper.R
+
+
+
+
+
 
 # Final Useful Files
 ## Behavioral
