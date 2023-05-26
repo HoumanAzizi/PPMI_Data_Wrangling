@@ -12,10 +12,8 @@ library(data.table)
 library(stringr)
 
 
-
-
-
-
+<br/><br/>
+<br/><br/>
 # Steps
 ## Step 1: Createa new folder & put the following 11 or 12 files/scripts inside it
 1. PPMI_Wide_to_Cleaned.R
@@ -36,10 +34,8 @@ library(stringr)
 ## Step 2: Run PPMI_Wrapper.R
 
 
-
-
-
-
+<br/><br/>
+<br/><br/>
 # Final Useful Files
 ## Behavioral
 PPMI_allVisits_cleaned_processed.csv
