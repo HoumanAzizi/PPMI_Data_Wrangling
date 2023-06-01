@@ -35,6 +35,8 @@ cat("\014")
 folder_path <- "/PATH/TO/SCRIPTS_FOLDER/"
 # Show the path to raw data file. Use '/' at the end of the path. (e.g. /home/PPMI_Raw_Data/)
 raw_path <- "/PATH/TO/RAW_DATA_FOLDER/"
+# Add the date of raw data download -> presented at the end of each downloaded file (ex. "01Jun2023")
+download_date <- "RAW_DATA_DOWNLOAD_DATE"
 
 setwd(folder_path)
 
@@ -66,7 +68,7 @@ source("PPMI_Merge_Final.R")
 # Running scripts back to back - outputs a confirmation after each step
 
 # Gets raw PPMI data -> turns into Wide versions using desired variables
-result1 <- PPMI_Raw_to_Wide(folder_path, raw_path)
+result1 <- PPMI_Raw_to_Wide(folder_path, raw_path, download_date)
 print(result1)
 
 # Combines all Wide files -> makes sure each row is a unique visit of a participant

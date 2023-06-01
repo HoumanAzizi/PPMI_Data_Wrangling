@@ -2,14 +2,14 @@
 # Gets raw PPMI data and turns them into the wide version using only the desired variables
 # Also does some calculations for some measures such as UPDRS3
 
-PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
+PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   setwd(folder_path)
   dir.create("Data_Wide", recursive = TRUE)
   setwd(paste0(folder_path,"Data_Wide/"))
   
   ######## MDS_UPDRS_Part_III.csv ########
-  UPDRS3 <- read.csv(paste0(raw_path,"MDS_UPDRS_Part_III.csv"), sep=",", header = T)
+  UPDRS3 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_III_",download_date,".csv"), sep=",", header = T)
   UPDRS3[,11:48] <- sapply(UPDRS3[,11:48],as.numeric)
   #creating values for CleanedPPMI_to_Processed.R file
   UPDRS_PartIII = rowSums(UPDRS3[,c("NP3SPCH","NP3FACXP","NP3RIGN","NP3RIGRU","NP3RIGLU","NP3RIGRL","NP3RIGLL","NP3FTAPR","NP3FTAPL","NP3HMOVR","NP3HMOVL","NP3PRSPR",
@@ -84,8 +84,8 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## MDS-UPDRS_Part_I.csv ########
-  UPDRS1 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_I.csv"), sep=",", header = T)
-  UPDRS1PQ <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_I_Patient_Questionnaire.csv"), sep=",", header = T)
+  UPDRS1 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_I_",download_date,".csv"), sep=",", header = T)
+  UPDRS1PQ <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_I_Patient_Questionnaire_",download_date,".csv"), sep=",", header = T)
   UPDRS1PQ <- UPDRS1PQ %>% select(c("PATNO","EVENT_ID","NP1SLPN","NP1SLPD","NP1PAIN","NP1URIN","NP1CNST","NP1LTHD","NP1FATG","NP1PTOT"))
   UPDRS1 <- UPDRS1 %>% left_join(UPDRS1PQ, by = c("PATNO","EVENT_ID"))
   UPDRS1[,6:13] <- sapply(UPDRS1[,6:13],as.numeric)
@@ -101,7 +101,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## MDS-UPDRS_Part_I_Patient_Questionnaire.csv ########
-  UPDRS1 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_I_Patient_Questionnaire.csv"), sep=",", header = T)
+  UPDRS1 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_I_Patient_Questionnaire_",download_date,".csv"), sep=",", header = T)
   PPMI <- UPDRS1 %>% select("PATNO","EVENT_ID","INFODT")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -110,7 +110,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## MDS-MDS_UPDRS_Part_II__Patient_Questionnaire.csv ########
-  UPDRS2 <- read.csv(paste0(raw_path,"MDS_UPDRS_Part_II__Patient_Questionnaire.csv"), sep=",", header = T)
+  UPDRS2 <- read.csv(paste0(raw_path,"MDS_UPDRS_Part_II__Patient_Questionnaire_",download_date,".csv"), sep=",", header = T)
   UPDRS_PartII = rowSums(UPDRS2[,c("NP2SPCH","NP2SALV","NP2SWAL","NP2EAT","NP2DRES","NP2HYGN","NP2HWRT","NP2HOBB","NP2TURN","NP2TRMR","NP2RISE","NP2WALK","NP2FREZ")])
   Tremor_score_2 = UPDRS2$NP2TRMR
   PIGD_score_2 = rowMeans(UPDRS2[,c("NP2WALK","NP2FREZ")])
@@ -126,7 +126,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## MDS-UPDRS_Part_IV__Motor_Complications.csv ########
-  UPDRS4 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_IV__Motor_Complications.csv"), sep=",", header = T)
+  UPDRS4 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_IV__Motor_Complications_",download_date,".csv"), sep=",", header = T)
   PPMI <- UPDRS4 %>% select("PATNO","EVENT_ID","INFODT","NP4TOT")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -135,7 +135,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Montreal_Cognitive_Assessment__MoCA_.csv ########
-  MOCA <- read.csv(paste0(raw_path,"Montreal_Cognitive_Assessment__MoCA_.csv"), sep=",", header = T)
+  MOCA <- read.csv(paste0(raw_path,"Montreal_Cognitive_Assessment__MoCA__",download_date,".csv"), sep=",", header = T)
   PPMI <- MOCA %>% select("PATNO","EVENT_ID","INFODT","MCATOT")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -144,7 +144,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## MRI_Metadata.csv ########
-  MRI <- read.csv(paste0(raw_path,"MRI_Metadata.csv"), sep=",", header = T)
+  MRI <- read.csv(paste0(raw_path,"MRI_Metadata_",download_date,".csv"), sep=",", header = T)
   PPMI <- MRI %>% select("PATNO","MRI_SCAN_DATE","MRI_SCAN_QUALITY_RATING","MRI_SEQ_DTI","MRI_SEQ_RS","MRI_SEQ_T1_WEIGHTED","MRI_SEQ_T2_WEIGHTED")
   colnames(PPMI) <- c("Patient_Number","MRI_Scan_Date_Metadata","MRI_Scan_Quality","DTI_Available","RS_Available","T1w_Available","T2w_Available")
   PPMI[PPMI == ''] <- NA
@@ -154,7 +154,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Magnetic_Resonance_Imaging__MRI_.csv ########
-  MRI <- read.csv(paste0(raw_path,"Magnetic_Resonance_Imaging__MRI_.csv"), sep=",", header = T)
+  MRI <- read.csv(paste0(raw_path,"Magnetic_Resonance_Imaging__MRI__",download_date,".csv"), sep=",", header = T)
   PPMI <- MRI %>% select("PATNO","EVENT_ID","INFODT","MRICMPLT")
   colnames(PPMI) <- c("Patient_Number","Visit_ID","MRI_Scan_Date","MRI_Completed")
   PPMI[PPMI == ''] <- NA
@@ -172,7 +172,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## DaTScan_Metadata.csv ########
-  DaT <- read.csv(paste0(raw_path,"DaTScan_Metadata.csv"), sep=",", header = T)
+  DaT <- read.csv(paste0(raw_path,"DaTScan_Metadata_",download_date,".csv"), sep=",", header = T)
   PPMI <- DaT %>% select("PATNO","EVENT_ID","DATSCAN_DATE","DATSCAN_LIGAND","DATSCAN_QUALITY_RATING","DATSCAN_IMAGE_ACCEPTABLE")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","DAT_Scan_Date_Metadata")
   PPMI <- PPMI %>% mutate(DAT_Scan_Date_Metadata_asDate = as.Date(paste("01/",DAT_Scan_Date_Metadata,sep=""),"%d/%m/%Y")) %>% relocate(DAT_Scan_Date_Metadata_asDate, .after = DAT_Scan_Date_Metadata) %>% arrange(Patient_Number,DAT_Scan_Date_Metadata_asDate)
@@ -182,7 +182,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## DaTScan_Analysis.csv ########
-  DaT <- read.csv(paste0(raw_path,"DaTScan_Analysis.csv"), sep=",", header = T)
+  DaT <- read.csv(paste0(raw_path,"DaTScan_Analysis_",download_date,".csv"), sep=",", header = T)
   PPMI <- DaT %>% select("PATNO","EVENT_ID","DATSCAN_DATE","PROTOCOL","DATSCAN_LIGAND","DATSCAN_CAUDATE_R","DATSCAN_CAUDATE_L","DATSCAN_PUTAMEN_R","DATSCAN_PUTAMEN_L","DATSCAN_PUTAMEN_R_ANT","DATSCAN_PUTAMEN_L_ANT")
   colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","DAT_Scan_Date","DAT_Protocol")
   # adding average DaT result columns
@@ -199,7 +199,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Benton_Judgement_of_Line_Orientation.csv ########
-  Bent <- read.csv(paste0(raw_path,"Benton_Judgement_of_Line_Orientation.csv"), sep=",", header = T)
+  Bent <- read.csv(paste0(raw_path,"Benton_Judgement_of_Line_Orientation_",download_date,".csv"), sep=",", header = T)
   PPMI <- Bent %>% select("PATNO","EVENT_ID","INFODT","PAG_NAME","JLO_TOTRAW","JLO_TOTCALC","AGE_ASSESS_JLO","DVS_JLO_MSSA","DVS_JLO_MSSAE")
   colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","Visit_Date","JLO_PAG_NAME")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -216,7 +216,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Cognitive_Categorization.csv ########
-  Cog <- read.csv(paste0(raw_path,"Cognitive_Categorization.csv"), sep=",", header = T)
+  Cog <- read.csv(paste0(raw_path,"Cognitive_Categorization_",download_date,".csv"), sep=",", header = T)
   PPMI <- Cog %>% select("PATNO","EVENT_ID","INFODT","PAG_NAME","COGDECLN","FNCDTCOG","COGSTATE","COGDXCL","COGCAT","COGCAT_TEXT","RVWNPSY")
   colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","Visit_Date","COG_PAG_NAME")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -226,7 +226,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Epworth_Sleepiness_Scale.csv ########
-  Sleep <- read.csv(paste0(raw_path,"Epworth_Sleepiness_Scale.csv"), sep=",", header = T)
+  Sleep <- read.csv(paste0(raw_path,"Epworth_Sleepiness_Scale_",download_date,".csv"), sep=",", header = T)
   PPMI <- Sleep %>% select("PATNO","EVENT_ID","INFODT","ESS1","ESS2","ESS3","ESS4","ESS5","ESS6","ESS7","ESS8")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -236,7 +236,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Family_History.csv ########
-  fam <- read.csv(paste0(raw_path,"Family_History.csv"), sep=",", header = T)
+  fam <- read.csv(paste0(raw_path,"Family_History_",download_date,".csv"), sep=",", header = T)
   PPMI <- fam %>% select("PATNO","EVENT_ID","INFODT","ANYFAMPD","DISFAMPD","BIOMOMPD","BIODADPD","FULSIBPD","HAFSIBPD","MAGPARPD","PAGPARPD","MATAUPD","PATAUPD","KIDSPD","MATCOUSPD","PATCOUSPD")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -267,7 +267,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Geriatric_Depression_Scale__Short_Version_.csv ########
-  GDS <- read.csv(paste0(raw_path,"Geriatric_Depression_Scale__Short_Version_.csv"), sep=",", header = T)
+  GDS <- read.csv(paste0(raw_path,"Geriatric_Depression_Scale__Short_Version__",download_date,".csv"), sep=",", header = T)
   PPMI <- GDS %>% select("PATNO","EVENT_ID","INFODT","GDSSATIS","GDSDROPD","GDSEMPTY","GDSBORED","GDSGSPIR","GDSAFRAD","GDSHAPPY","GDSHLPLS","GDSHOME","GDSMEMRY","GDSALIVE","GDSWRTLS","GDSENRGY","GDSHOPLS","GDSBETER")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -277,7 +277,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Hopkins_Verbal_Learning_Test_-_Revised.csv ########
-  hvlt <- read.csv(paste0(raw_path,"Hopkins_Verbal_Learning_Test_-_Revised.csv"), sep=",", header = T)
+  hvlt <- read.csv(paste0(raw_path,"Hopkins_Verbal_Learning_Test_-_Revised_",download_date,".csv"), sep=",", header = T)
   PPMI <- hvlt %>% select("PATNO","EVENT_ID","INFODT","AGE_ASSESS_HVLT","DVT_TOTAL_RECALL","DVT_DELAYED_RECALL","DVT_RETENTION","DVT_RECOG_DISC_INDEX")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -287,7 +287,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Letter_-_Number_Sequencing.csv ########
-  lns <- read.csv(paste0(raw_path,"Letter_-_Number_Sequencing.csv"), sep=",", header = T)
+  lns <- read.csv(paste0(raw_path,"Letter_-_Number_Sequencing_",download_date,".csv"), sep=",", header = T)
   PPMI <- lns %>% select("PATNO","EVENT_ID","INFODT","LNS_TOTRAW","AGE_ASSESS_LNS","DVS_LNS")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -297,7 +297,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Lumbar_Puncture.csv ########
-  lumb <- read.csv(paste0(raw_path,"Lumbar_Puncture.csv"), sep=",", header = T)
+  lumb <- read.csv(paste0(raw_path,"Lumbar_Puncture_",download_date,".csv"), sep=",", header = T)
   PPMI <- lumb %>% select("PATNO","EVENT_ID","INFODT","TOPRRSLT","TGLCRSLT")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -307,7 +307,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Modified_Schwab___England_Activities_of_Daily_Living.csv ########
-  MSEA <- read.csv(paste0(raw_path,"Modified_Schwab___England_Activities_of_Daily_Living.csv"), sep=",", header = T)
+  MSEA <- read.csv(paste0(raw_path,"Modified_Schwab___England_Activities_of_Daily_Living_",download_date,".csv"), sep=",", header = T)
   PPMI <- MSEA %>% select("PATNO","EVENT_ID","INFODT","MSEADLG")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -317,7 +317,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## QUIP-Current-Short.csv ########
-  quip <- read.csv(paste0(raw_path,"QUIP-Current-Short.csv"), sep=",", header = T)
+  quip <- read.csv(paste0(raw_path,"QUIP-Current-Short_",download_date,".csv"), sep=",", header = T)
   PPMI <- quip %>% select("PATNO","EVENT_ID","INFODT","TMGAMBLE","CNTRLGMB","TMSEX","CNTRLSEX","TMBUY","CNTRLBUY","TMEAT","CNTRLEAT","TMTORACT","TMTMTACT","TMTRWD","TMDISMED","CNTRLDSM")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -327,7 +327,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## REM_Sleep_Behavior_Disorder_Questionnaire.csv ########
-  rem <- read.csv(paste0(raw_path,"REM_Sleep_Behavior_Disorder_Questionnaire.csv"), sep=",", header = T)
+  rem <- read.csv(paste0(raw_path,"REM_Sleep_Behavior_Disorder_Questionnaire_",download_date,".csv"), sep=",", header = T)
   PPMI <- rem %>% select("PATNO","EVENT_ID","INFODT","DRMVIVID","DRMAGRAC","DRMNOCTB","SLPLMBMV","SLPINJUR","DRMVERBL","DRMFIGHT",
                          "DRMUMV","DRMOBJFL","MVAWAKEN","DRMREMEM","SLPDSTRB","STROKE","HETRA","PARKISM","RLS",
                          "NARCLPSY","DEPRS","EPILEPSY","BRNINFM","CNSOTH")
@@ -339,7 +339,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## SCOPA-AUT.csv ########
-  SCOPA <- read.csv(paste0(raw_path,"SCOPA-AUT.csv"), sep=",", header = T)
+  SCOPA <- read.csv(paste0(raw_path,"SCOPA-AUT_",download_date,".csv"), sep=",", header = T)
   PPMI <- SCOPA %>% select("PATNO","EVENT_ID","INFODT","SCAU1","SCAU2","SCAU3","SCAU4","SCAU5","SCAU6","SCAU7","SCAU8","SCAU9","SCAU10","SCAU11","SCAU12",
                            "SCAU13","SCAU14","SCAU15","SCAU16","SCAU17","SCAU18","SCAU19","SCAU20","SCAU21","SCAU22","SCAU23","SCAU23A","SCAU23AT",
                            "SCAU24","SCAU25","SCAU26A","SCAU26AT","SCAU26B","SCAU26BT","SCAU26C","SCAU26CT","SCAU26D","SCAU26DT")
@@ -351,7 +351,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Modified_Semantic_Fluency.csv ########
-  MSF <- read.csv(paste0(raw_path,"Modified_Semantic_Fluency.csv"), sep=",", header = T)
+  MSF <- read.csv(paste0(raw_path,"Modified_Semantic_Fluency_",download_date,".csv"), sep=",", header = T)
   PPMI <- MSF %>% select("PATNO","EVENT_ID","INFODT","AGE_ASSESS_SFTANIM","DVS_SFTANIM","DVT_SFTANIM")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -361,7 +361,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## State-Trait_Anxiety_Inventory.csv ########
-  STAI <- read.csv(paste0(raw_path,"State-Trait_Anxiety_Inventory.csv"), sep=",", header = T)
+  STAI <- read.csv(paste0(raw_path,"State-Trait_Anxiety_Inventory_",download_date,".csv"), sep=",", header = T)
   PPMI <- STAI %>% select("PATNO","EVENT_ID","INFODT","STAIAD1","STAIAD2","STAIAD3","STAIAD4","STAIAD5","STAIAD6","STAIAD7","STAIAD8",
                           "STAIAD9","STAIAD10","STAIAD11","STAIAD12","STAIAD13","STAIAD14","STAIAD15","STAIAD16",
                           "STAIAD17","STAIAD18","STAIAD19","STAIAD20","STAIAD21","STAIAD22","STAIAD23","STAIAD24",
@@ -375,7 +375,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Symbol_Digit_Modalities_Test.csv ########
-  SDM <- read.csv(paste0(raw_path,"Symbol_Digit_Modalities_Test.csv"), sep=",", header = T)
+  SDM <- read.csv(paste0(raw_path,"Symbol_Digit_Modalities_Test_",download_date,".csv"), sep=",", header = T)
   PPMI <- SDM %>% select("PATNO","EVENT_ID","INFODT","SDMTOTAL","AGE_ASSESS_SDM","DVSD_SDM","DVT_SDM")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -386,7 +386,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   
   
   ######## University_of_Pennsylvania_Smell_Identification_Test__UPSIT_.csv ########
-  UPSIT <- read.csv(paste0(raw_path,"University_of_Pennsylvania_Smell_Identification_Test__UPSIT_.csv"), sep=",", header = T)
+  UPSIT <- read.csv(paste0(raw_path,"University_of_Pennsylvania_Smell_Identification_Test__UPSIT__",download_date,".csv"), sep=",", header = T)
   PPMI <- UPSIT %>% select("PATNO","EVENT_ID","INFODT","UPSIT_PRCNTGE","TOTAL_CORRECT","UPSITFORM")
   colnames(PPMI) <- c("Patient_Number","Visit_ID","Visit_Date","UPSIT_PRCNTGE","UPSIT_TOTAL_CORRECT","UPSITFORM")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -396,7 +396,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Vital_Signs.csv ########
-  Vital <- read.csv(paste0(raw_path,"Vital_Signs.csv"), sep=",", header = T)
+  Vital <- read.csv(paste0(raw_path,"Vital_Signs_",download_date,".csv"), sep=",", header = T)
   PPMI <- Vital %>% select("PATNO","EVENT_ID","INFODT","WGTKG","HTCM","TEMPC","SYSSUP","DIASUP","HRSUP","SYSSTND","DIASTND","HRSTND")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -406,7 +406,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## PD_Diagnosis_History.csv ########
-  Hist <- read.csv(paste0(raw_path,"PD_Diagnosis_History.csv"), sep=",", header = T)
+  Hist <- read.csv(paste0(raw_path,"PD_Diagnosis_History_",download_date,".csv"), sep=",", header = T)
   PPMI <- Hist %>% select("PATNO","EVENT_ID","INFODT","SXDT","PDDXDT","DXTREMOR","DXRIGID","DXBRADY","DXPOSINS","DXOTHSX")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -416,7 +416,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Blood_Chemistry___Hematology.csv ########
-  blood <- read.csv(paste0(raw_path,"Blood_Chemistry___Hematology.csv"), sep=",", header = T)
+  blood <- read.csv(paste0(raw_path,"Blood_Chemistry___Hematology_",download_date,".csv"), sep=",", header = T)
   PPMI <- blood %>% filter(EVENT_ID == "SC" & 
                              LVISTYPE == "Screening" &
                              LTSTNAME %in% c("Total Protein","Albumin-QT",
@@ -448,7 +448,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Socio-Economics.csv ########
-  SES <- read.csv(paste0(raw_path,"Socio-Economics.csv"), sep=",", header = T)
+  SES <- read.csv(paste0(raw_path,"Socio-Economics_",download_date,".csv"), sep=",", header = T)
   PPMI <- SES %>% select("PATNO","EVENT_ID","INFODT","EDUCYRS")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -458,7 +458,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Skin_Biopsy.csv ########
-  skin <- read.csv(paste0(raw_path,"Skin_Biopsy.csv"), sep=",", header = T)
+  skin <- read.csv(paste0(raw_path,"Skin_Biopsy_",download_date,".csv"), sep=",", header = T)
   PPMI <- skin %>% select("PATNO","EVENT_ID","INFODT","SKBIOCMP","ANSTHADM","SKBIOLOC","FIXSKBSID","FSHSKBSID")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -468,7 +468,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Prodromal_History.csv ########
-  prodromal <- read.csv(paste0(raw_path,"Prodromal_History.csv"), sep=",", header = T)
+  prodromal <- read.csv(paste0(raw_path,"Prodromal_History_",download_date,".csv"), sep=",", header = T)
   PPMI <- prodromal %>% select("PATNO","EVENT_ID","INFODT","PROSCRN","PRORBDENRL","RBDPATRPT","RBDQUEST",
                                "RBDDIAG","RBDDISYDT","RBDDIDT","RBDPSG","RBDPSSYDT","RBDPSDT","PROGENENRL",
                                "PROHYPENRL","PRO1FAMPD","PROSYNBYP","PROPREVHYP") %>% 
@@ -484,7 +484,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## AV-133_PET_Analysis.csv ########
-  pet <- read.csv(paste0(raw_path,"AV-133_PET_Analysis.csv"), sep=",", header = T)
+  pet <- read.csv(paste0(raw_path,"AV-133_PET_Analysis_",download_date,".csv"), sep=",", header = T)
   PPMI <- pet %>% select("PATNO","EVENT_ID","AV133_SCAN_DATE","AV133_RCAUD_S","AV133_RPUTANT_S",
                          "AV133_RPUTPOST_S","AV133_LCAUD_S","AV133_LPUTANT_S","AV133_LPUTPOST_S")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","PET_Scan_Date")
@@ -495,7 +495,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Determination_of_Freezing_and_Falls.csv ########
-  fall <- read.csv(paste0(raw_path,"Determination_of_Freezing_and_Falls.csv"), sep=",", header = T)
+  fall <- read.csv(paste0(raw_path,"Determination_of_Freezing_and_Falls_",download_date,".csv"), sep=",", header = T)
   PPMI <- fall %>% select("PATNO","EVENT_ID","INFODT","PTCGBOTH","FRZGT1W","FLNFR1W","FRZGT12M","FLNFR12M","INJFRHIP",
                           "INJFRUE","INJFRSKL","INJFROTH","HINJNOLC","HINJLOC2","INJSTCH","INJOTH","FLLDRVIS","FLLERVIS","FLLHOSP","FLLSURG","FLLINST")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
@@ -506,7 +506,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Demographics.csv ########
-  demos <- read.csv(paste0(raw_path,"Demographics.csv"), sep=",", header = T)
+  demos <- read.csv(paste0(raw_path,"Demographics_",download_date,".csv"), sep=",", header = T)
   PPMI <- demos %>% select("PATNO","EVENT_ID","INFODT","SEX","HANDED","HISPLAT","RAINDALS","RAASIAN","RABLACK","RAHAWOPI","RAWHITE","BIRTHDT")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -517,7 +517,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   cat("\014")
   
   ######## Participant_Status.csv ########
-  status <- read.csv(paste0(raw_path,"Participant_Status.csv"), sep=",", header = T)
+  status <- read.csv(paste0(raw_path,"Participant_Status_",download_date,".csv"), sep=",", header = T)
   PPMI <- status %>% select("PATNO","COHORT","ENROLL_AGE","ENROLL_DATE","ENROLL_STATUS")
   colnames(PPMI)[1:5] <- c("Patient_Number","Cohort_n","ENROLL_AGE","Enroll_Date","Enroll_Status")
   PPMI <- PPMI %>% mutate(Enroll_Date_asDate = as.Date(paste("01/",Enroll_Date,sep=""),"%d/%m/%Y")) %>% relocate(Enroll_Date_asDate, .after = Enroll_Date) %>% arrange(Patient_Number,Enroll_Date_asDate)
@@ -534,7 +534,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   
   
   ######## Clock_Drawing.csv ########
-  clock <- read.csv(paste0(raw_path,"Clock_Drawing.csv"), sep=",", header = T)
+  clock <- read.csv(paste0(raw_path,"Clock_Drawing_",download_date,".csv"), sep=",", header = T)
   PPMI <- clock %>% select("PATNO","EVENT_ID","INFODT","CLCKPII","CLCK2HND","CLCKNMRK","CLCKNUIN","CLCKALNU","CLCKNUSP","CLCKNUED","CLCKTOT")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -547,7 +547,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path) {
   
   
   ######## Current_Biospecimen_Analysis_Results.csv ########
-  bio <- read.csv(paste0(raw_path,"Current_Biospecimen_Analysis_Results.csv"), sep=",", header = T)
+  bio <- read.csv(paste0(raw_path,"Current_Biospecimen_Analysis_Results_",download_date,".csv"), sep=",", header = T)
   bio_list <- c("ApoE Genotype","APOE GENOTYPE","DJ-1","SCORE","SNCA_multiplication","Triglycerides","Total Cholesterol",
                 "LDL","HDL","Apolipoprotein A1","EGF ELISA","Serum IGF-1","CSF Alpha-synuclein","tTau","ABeta 1-42",
                 "pTau","GRS","NfL","NFL","GFAP","S100","IL-6","a-Synuclein","NEV a-synuclein  (rep1)",
