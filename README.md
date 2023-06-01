@@ -3,13 +3,14 @@
 ## Overview
 Gets raw PPMI data -> outputs processed/cleaned versions
 
-## Required Libraries
-library(tidyr)  
-library(dplyr)  
-library(reshape2)  
-library(hablar)  
-library(data.table)  
-library(stringr)
+## Required Libraries (& Versions)
+R: 4.2.1 (2022-06-23)  
+library(tidyr): 1.2.1  
+library(dplyr): 1.1.0  
+library(reshape2): 1.4.4  
+library(hablar): 0.3.1  
+library(data.table): 1.14.6  
+library(stringr): 1.5.0  
 
 
 <br/><br/>
