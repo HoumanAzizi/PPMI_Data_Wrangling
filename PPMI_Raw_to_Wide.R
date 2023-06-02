@@ -10,7 +10,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   ######## MDS_UPDRS_Part_III.csv ########
   UPDRS3 <- read.csv(paste0(raw_path,"MDS-UPDRS_Part_III_",download_date,".csv"), sep=",", header = T)
-  UPDRS3[,11:48] <- sapply(UPDRS3[,11:48],as.numeric)
+  # UPDRS3[,11:48] <- sapply(UPDRS3[,11:48],as.numeric) # new versions of PPMI raw data has fixed this problem
   #creating values for CleanedPPMI_to_Processed.R file
   UPDRS_PartIII = rowSums(UPDRS3[,c("NP3SPCH","NP3FACXP","NP3RIGN","NP3RIGRU","NP3RIGLU","NP3RIGRL","NP3RIGLL","NP3FTAPR","NP3FTAPL","NP3HMOVR","NP3HMOVL","NP3PRSPR",
                                     "NP3PRSPL","NP3TTAPR","NP3TTAPL","NP3LGAGR","NP3LGAGL","NP3RISNG","NP3GAIT","NP3FRZGT","NP3PSTBL","NP3POSTR","NP3BRADY","NP3PTRMR",
@@ -23,16 +23,35 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   # Creating UPDRS values based on regular, ON, OFF, and A UPDRS3 versions
   # Creating values for Left and Right sides
-  PPMI <- UPDRS3 %>% select("PATNO","EVENT_ID","INFODT","PAG_NAME","NP3TOT",
+  # For new PPMI raw data: Use PDSTATE and Fix duplicate rows
+  PPMI <- UPDRS3 %>% select("PATNO","EVENT_ID","INFODT","PAG_NAME","PDSTATE","NP3TOT",
                             "NP3FTAPL","NP3FTAPR","NP3HMOVL","NP3HMOVR",
                             "NP3KTRML","NP3KTRMR","NP3LGAGL","NP3LGAGR","NP3PRSPL","NP3PRSPR","NP3PTRML","NP3PTRMR",
                             "NP3TTAPL","NP3TTAPR","NP3RTALU","NP3RTARU","NP3RTALL","NP3RTARL","NP3RIGLU","NP3RIGRU","NP3RIGLL","NP3RIGRL",
-                            "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated") %>% 
-    pivot_wider(names_from = PAG_NAME,
-                values_from = c("NP3TOT","NP3RIGLU","NP3RIGRU","NP3RIGLL","NP3RIGRL","NP3FTAPL","NP3FTAPR","NP3HMOVL","NP3HMOVR",
-                                "NP3KTRML","NP3KTRMR","NP3LGAGL","NP3LGAGR","NP3PRSPL","NP3PRSPR","NP3TTAPL","NP3TTAPR",
-                                "NP3PTRML","NP3PTRMR","NP3RTALU","NP3RTARU","NP3RTALL","NP3RTARL",
-                                "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated"))
+                            "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated")
+  # Merging PAG_NAME and PDSTATE
+  PPMI <- PPMI %>% mutate(PAG_NAME = paste0(PAG_NAME,PDSTATE)) %>% select(-"PDSTATE")
+  # Removing Duplicates - method: arranging and taking first column
+  PPMI <- PPMI %>% mutate(unique_id = paste0(PATNO, EVENT_ID, PAG_NAME))
+  dups <- PPMI %>% group_by(unique_id) %>% mutate(count = n()) %>% 
+    filter(count > 1) %>% select(-"count") %>% arrange(PATNO, PAG_NAME)
+  dups_fixed <- dups %>% mutate(remove = duplicated(unique_id)) %>% filter(remove == FALSE) %>% 
+    select(-"remove")
+  # Putting the fixed rows in PPMI
+  PPMI <- PPMI %>% filter(!(unique_id %in% dups_fixed$unique_id))
+  PPMI <- rbind(PPMI, dups_fixed)
+  PPMI <- PPMI %>% select(-"unique_id")
+  
+  # Expanding columns based on PAG_NAME
+  PPMI <- PPMI %>% pivot_wider(names_from = PAG_NAME,
+                               values_from = c("NP3TOT","NP3RIGLU","NP3RIGRU","NP3RIGLL","NP3RIGRL","NP3FTAPL","NP3FTAPR","NP3HMOVL","NP3HMOVR",
+                               "NP3KTRML","NP3KTRMR","NP3LGAGL","NP3LGAGR","NP3PRSPL","NP3PRSPR","NP3TTAPL","NP3TTAPR",
+                               "NP3PTRML","NP3PTRMR","NP3RTALU","NP3RTARU","NP3RTALL","NP3RTARL",
+                               "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated"))
+  
+  
+  
+  # Calculating L/R UPDRS3 values
   PPMI <- PPMI %>% rowwise() %>% 
     mutate(NP3TOT_NUPDRS3_L = sum(NP3FTAPL_NUPDRS3, NP3HMOVL_NUPDRS3, NP3KTRML_NUPDRS3, NP3LGAGL_NUPDRS3, NP3PRSPL_NUPDRS3, NP3PTRML_NUPDRS3,
                                   NP3RIGLU_NUPDRS3, NP3RIGLL_NUPDRS3, NP3TTAPL_NUPDRS3, NP3RTALU_NUPDRS3, NP3RTALL_NUPDRS3,  na.rm = FALSE),
@@ -469,7 +488,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   ######## Prodromal_History.csv ########
   prodromal <- read.csv(paste0(raw_path,"Prodromal_History_",download_date,".csv"), sep=",", header = T)
-  PPMI <- prodromal %>% select("PATNO","EVENT_ID","INFODT","PROSCRN","PRORBDENRL","RBDPATRPT","RBDQUEST",
+  PPMI <- prodromal %>% select("PATNO","EVENT_ID","INFODT","PROSCRN","PRORBDENRL",
                                "RBDDIAG","RBDDISYDT","RBDDIDT","RBDPSG","RBDPSSYDT","RBDPSDT","PROGENENRL",
                                "PROHYPENRL","PRO1FAMPD","PROSYNBYP","PROPREVHYP") %>% 
     mutate(RBDDISYDT = as.Date(paste("01/",RBDDISYDT,sep=""),"%d/%m/%Y")) %>% 
