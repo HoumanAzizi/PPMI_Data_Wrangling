@@ -537,7 +537,8 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   ######## Participant_Status.csv ########
   status <- read.csv(paste0(raw_path,"Participant_Status_",download_date,".csv"), sep=",", header = T)
-  PPMI <- status %>% select("PATNO","COHORT","ENROLL_AGE","ENROLL_DATE","ENROLL_STATUS")
+  PPMI <- status %>% select("PATNO","COHORT","ENROLL_AGE","ENROLL_DATE","ENROLL_STATUS",
+                            "ENRLPINK1", "ENRLPRKN", "ENRLSRDC", "ENRLHPSM", "ENRLRBD", "ENRLLRRK2", "ENRLSNCA", "ENRLGBA")
   colnames(PPMI)[1:5] <- c("Patient_Number","Cohort_n","ENROLL_AGE","Enroll_Date","Enroll_Status")
   PPMI <- PPMI %>% mutate(Enroll_Date_asDate = as.Date(paste("01/",Enroll_Date,sep=""),"%d/%m/%Y")) %>% relocate(Enroll_Date_asDate, .after = Enroll_Date) %>% arrange(Patient_Number,Enroll_Date_asDate)
   PPMI <- PPMI %>% mutate(Cohort = case_when(Cohort_n == 1 ~ "PD",

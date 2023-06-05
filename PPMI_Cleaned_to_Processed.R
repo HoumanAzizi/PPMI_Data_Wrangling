@@ -132,10 +132,44 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI$ESS_total <- ESS_total
   
   
+  # Add Subgroups
+  subcohort_names <- c("ENRLPINK1", "ENRLPRKN", "ENRLSRDC", "ENRLHPSM", "ENRLRBD", "ENRLLRRK2", "ENRLSNCA", "ENRLGBA", "Cohort")
+  # Change all NAs into 0
+  for (subcohort in subcohort_names) {
+    PPMI[[subcohort]][is.na(PPMI[[subcohort]])] <- 0
+  }
+  sub_cohort <- as.data.frame(PPMI[,subcohort_names])
+  sub_cohort <- sub_cohort %>% 
+    mutate(Sub_Cohort_Regular_tmp = case_when(ENRLPINK1 == 1 | 
+                                            ENRLPRKN == 1 | 
+                                            ENRLLRRK2 == 1 | 
+                                            ENRLSNCA == 1 | 
+                                            ENRLGBA == 1 ~ "Genetic",
+                                          ENRLRBD == 1 ~ "RBD",
+                                          ENRLHPSM == 1 ~ "Hyposmia")) %>% 
+    mutate(Sub_Cohort_Detailed_tmp = case_when(ENRLPINK1 == 1 ~ "Pink1",
+                                           ENRLPRKN == 1 ~ "Parkin", 
+                                           ENRLLRRK2 == 1 ~ "LRRK2",
+                                           ENRLSNCA == 1 ~ "SNCA",
+                                           ENRLGBA == 1 ~ "GBA",
+                                           ENRLRBD == 1 ~ "RBD",
+                                           ENRLHPSM == 1 ~ "Hyposmia")) %>% 
+    mutate(Sub_Cohort_Regular = case_when(!is.na(Sub_Cohort_Regular_tmp) ~ paste0(Cohort,"_",Sub_Cohort_Regular_tmp),
+                                          TRUE ~ Cohort)) %>%
+    mutate(Sub_Cohort_Detailed = case_when(!is.na(Sub_Cohort_Detailed_tmp) ~ paste0(Cohort,"_",Sub_Cohort_Detailed_tmp),
+                                          TRUE ~ Cohort))
+  # Add new columns
+  PPMI$Sub_Cohort_Regular <- sub_cohort$Sub_Cohort_Regular
+  PPMI$Sub_Cohort_Detailed <- sub_cohort$Sub_Cohort_Detailed
+  # End of "Add Subgroups"
+  
+  
+  
+  
   # NOT available columns: CNO, DXOTHCM, DOMSIDE
   # These ones are available separately in the bio file: "Abeta.42","CSF.Alpha.synuclein","p.Tau181P","Total.tau","rs34637584_LRRK2_p.G2019S","rs76763715_GBA_p.N370S"
   PPMI <- PPMI %>% select("Patient_Number", "Visit_ID", "Visit_Date_asDate", "Age_at_Visit", "BL_Age", "BIRTHDT_asDate",
-                          "BL_Date", "Days_from_BL", "Cohort", "SEX", "EDUCYRS", "HANDED",
+                          "BL_Date", "Days_from_BL", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "SEX", "EDUCYRS", "HANDED",
                           "UPDRS_PartI", "UPDRS_PartII", "UPDRS_PartIII", "UPDRS_PartIII_Left", "UPDRS_PartIII_Right", "UPDRS_Total_Score",
                           "MSEADLG", "Tremor_score", "PIGD_score", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", 
                           "SCOPA_AUT_Score", "STAI_State_Score", "STAI_Trait_Score", "STAI_Total_Score", "UPSIT_Score",
@@ -158,7 +192,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   
   # DayDiff_Visit_Baseline -> Day_Diff (Shows day difference of this visit from Baseline)
   new_names <- c("Patient_ID", "Visit_ID", "Visit_Date", "Age", "Age_Baseline", "Birthdate",
-                 "Baseline_Date", "DayDiff", "Cohort", "Sex" , "Education_Years", "Handedness",
+                 "Baseline_Date", "DayDiff", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "Sex" , "Education_Years", "Handedness",
                  "UPDRS_Part_I", "UPDRS_Part_II", "UPDRS_Part_III", "UPDRS_Part_III_Left", "UPDRS_Part_III_Right", "UPDRS_Total_Score",
                  "Schwab_England", "Tremor", "PIGD", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", 
                  "SCOPA_AUT", "STAI_State", "STAI_Trait", "STAI_Total", "UPSIT_Score", 
@@ -186,7 +220,9 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   Center <- read.csv("PPMI_CNO.csv")
   colnames(Center) <- c("Patient_ID", "Center_ID")
   PPMI <- PPMI %>% left_join(Center, by = c("Patient_ID")) %>% relocate(Center_ID, .after = Baseline_Date)
-  # End of "Add CNOs"
+  # End of section
+  
+  
   
   
   
