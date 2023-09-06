@@ -118,6 +118,15 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
   PPMI <- removeDuplicates(PPMI,"COG")
   
   
+
+  
+  ######## Cognitive_Change.csv ########
+  newFile <- read.csv("Cognitive_Change_wide.csv", sep=",", header = T)
+  newFile <- newFile %>% filter(Cognitive_Change == 1)
+  PPMI <- PPMI %>% full_join(newFile, by = c("Patient_Number","Visit_ID","Visit_Date","Visit_Date_asDate")) %>% arrange(Patient_Number, Visit_Date_asDate)
+  PPMI <- removeDuplicates(PPMI,"Cognitive_Change")
+  
+  
   
   
   ######## Epworth_Sleepiness_Scale.csv ########

@@ -244,6 +244,16 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   cat("\014")
   
+  ######## Cognitive_Change.csv ########
+  Cog <- read.csv(paste0(raw_path,"Cognitive_Change_",download_date,".csv"), sep=",", header = T)
+  PPMI <- Cog %>% select("PATNO","EVENT_ID","INFODT","COGCHG")
+  colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","Visit_Date","Cognitive_Change")
+  PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
+  PPMI[PPMI == ''] <- NA
+  write.csv(PPMI, "../Data_Wide/Cognitive_Change_wide.csv", row.names=FALSE)
+  
+  cat("\014")
+  
   ######## Epworth_Sleepiness_Scale.csv ########
   Sleep <- read.csv(paste0(raw_path,"Epworth_Sleepiness_Scale_",download_date,".csv"), sep=",", header = T)
   PPMI <- Sleep %>% select("PATNO","EVENT_ID","INFODT","ESS1","ESS2","ESS3","ESS4","ESS5","ESS6","ESS7","ESS8")
