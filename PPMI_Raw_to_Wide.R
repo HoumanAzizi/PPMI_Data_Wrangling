@@ -42,39 +42,53 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   PPMI <- rbind(PPMI, dups_fixed)
   PPMI <- PPMI %>% select(-"unique_id")
   
-  # Expanding columns based on PAG_NAME
-  PPMI <- PPMI %>% pivot_wider(names_from = PAG_NAME,
-                               values_from = c("NP3TOT","NP3RIGLU","NP3RIGRU","NP3RIGLL","NP3RIGRL","NP3FTAPL","NP3FTAPR","NP3HMOVL","NP3HMOVR",
-                               "NP3KTRML","NP3KTRMR","NP3LGAGL","NP3LGAGR","NP3PRSPL","NP3PRSPR","NP3TTAPL","NP3TTAPR",
-                               "NP3PTRML","NP3PTRMR","NP3RTALU","NP3RTARU","NP3RTALL","NP3RTARL",
-                               "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated"))
+  # Older Version: Taking only UPDRS3 columns with NUPDRS3 group
+  # # Expanding columns based on PAG_NAME
+  # PPMI <- PPMI %>% pivot_wider(names_from = PAG_NAME,
+  #                              values_from = c("NP3TOT","NP3RIGLU","NP3RIGRU","NP3RIGLL","NP3RIGRL","NP3FTAPL","NP3FTAPR","NP3HMOVL","NP3HMOVR",
+  #                              "NP3KTRML","NP3KTRMR","NP3LGAGL","NP3LGAGR","NP3PRSPL","NP3PRSPR","NP3TTAPL","NP3TTAPR",
+  #                              "NP3PTRML","NP3PTRMR","NP3RTALU","NP3RTARU","NP3RTALL","NP3RTARL",
+  #                              "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated"))
+  # 
+  # 
+  # 
+  # # Calculating L/R UPDRS3 values
+  # PPMI <- PPMI %>% rowwise() %>% 
+  #   mutate(NP3TOT_NUPDRS3_L = sum(NP3FTAPL_NUPDRS3, NP3HMOVL_NUPDRS3, NP3KTRML_NUPDRS3, NP3LGAGL_NUPDRS3, NP3PRSPL_NUPDRS3, NP3PTRML_NUPDRS3,
+  #                                 NP3RIGLU_NUPDRS3, NP3RIGLL_NUPDRS3, NP3TTAPL_NUPDRS3, NP3RTALU_NUPDRS3, NP3RTALL_NUPDRS3,  na.rm = FALSE),
+  #          NP3TOT_NUPDRS3_R = sum(NP3FTAPR_NUPDRS3 , NP3HMOVR_NUPDRS3 , NP3KTRMR_NUPDRS3 , NP3LGAGR_NUPDRS3 , NP3PRSPR_NUPDRS3 , NP3PTRMR_NUPDRS3, 
+  #                                 NP3RIGRU_NUPDRS3, NP3RIGRL_NUPDRS3, NP3TTAPR_NUPDRS3, NP3RTARU_NUPDRS3, NP3RTARL_NUPDRS3, na.rm = FALSE),
+  #          NP3TOT_NUPDRS3A_L = sum(NP3FTAPL_NUPDRS3A , NP3HMOVL_NUPDRS3A , NP3KTRML_NUPDRS3A , NP3LGAGL_NUPDRS3A , NP3PRSPL_NUPDRS3A , NP3PTRML_NUPDRS3A, 
+  #                                  NP3RIGLU_NUPDRS3A, NP3RIGLL_NUPDRS3A, NP3TTAPL_NUPDRS3A, NP3RTALU_NUPDRS3A, NP3RTALL_NUPDRS3A, na.rm = FALSE),
+  #          NP3TOT_NUPDRS3A_R = sum(NP3FTAPR_NUPDRS3A , NP3HMOVR_NUPDRS3A , NP3KTRMR_NUPDRS3A , NP3LGAGR_NUPDRS3A , NP3PRSPR_NUPDRS3A , NP3PTRMR_NUPDRS3A, 
+  #                                  NP3RIGRU_NUPDRS3A, NP3RIGRL_NUPDRS3A, NP3TTAPR_NUPDRS3A, NP3RTARU_NUPDRS3A, NP3RTARL_NUPDRS3A, na.rm = FALSE),
+  #          NP3TOT_NUPDR3OF_L = sum(NP3FTAPL_NUPDR3OF , NP3HMOVL_NUPDR3OF , NP3KTRML_NUPDR3OF , NP3LGAGL_NUPDR3OF , NP3PRSPL_NUPDR3OF , NP3PTRML_NUPDR3OF, 
+  #                                  NP3RIGLU_NUPDR3OF, NP3RIGLL_NUPDR3OF, NP3TTAPL_NUPDR3OF, NP3RTALU_NUPDR3OF, NP3RTALL_NUPDR3OF, na.rm = FALSE),
+  #          NP3TOT_NUPDR3OF_R = sum(NP3FTAPR_NUPDR3OF , NP3HMOVR_NUPDR3OF , NP3KTRMR_NUPDR3OF , NP3LGAGR_NUPDR3OF , NP3PRSPR_NUPDR3OF , NP3PTRMR_NUPDR3OF, 
+  #                                  NP3RIGRU_NUPDR3OF, NP3RIGRL_NUPDR3OF, NP3TTAPR_NUPDR3OF, NP3RTARU_NUPDR3OF, NP3RTARL_NUPDR3OF, na.rm = FALSE),
+  #          NP3TOT_NUPDR3ON_L = sum(NP3FTAPL_NUPDR3ON , NP3HMOVL_NUPDR3ON , NP3KTRML_NUPDR3ON , NP3LGAGL_NUPDR3ON , NP3PRSPL_NUPDR3ON , NP3PTRML_NUPDR3ON, 
+  #                                  NP3RIGLU_NUPDR3ON, NP3RIGLL_NUPDR3ON, NP3TTAPL_NUPDR3ON, NP3RTALU_NUPDR3ON, NP3RTALL_NUPDR3ON, na.rm = FALSE),
+  #          NP3TOT_NUPDR3ON_R = sum(NP3FTAPR_NUPDR3ON , NP3HMOVR_NUPDR3ON , NP3KTRMR_NUPDR3ON , NP3LGAGR_NUPDR3ON , NP3PRSPR_NUPDR3ON , NP3PTRMR_NUPDR3ON, 
+  #                                  NP3RIGRU_NUPDR3ON, NP3RIGRL_NUPDR3ON, NP3TTAPR_NUPDR3ON, NP3RTARU_NUPDR3ON, NP3RTARL_NUPDR3ON, na.rm = FALSE))
+  # PPMI <- PPMI %>% select("PATNO","EVENT_ID","INFODT","NP3TOT_NUPDRS3","NP3TOT_NUPDRS3A","NP3TOT_NUPDR3OF","NP3TOT_NUPDR3ON",
+  #                         "NP3TOT_NUPDRS3_L","NP3TOT_NUPDRS3_R","NP3TOT_NUPDRS3A_L","NP3TOT_NUPDRS3A_R","NP3TOT_NUPDR3OF_L","NP3TOT_NUPDR3OF_R","NP3TOT_NUPDR3ON_L","NP3TOT_NUPDR3ON_R",
+  #                         "NP3TOT_Calculated_NUPDRS3","NP3TOT_Calculated_NUPDRS3A","NP3TOT_Calculated_NUPDR3OF","NP3TOT_Calculated_NUPDR3ON","Tremor3_Calculated_NUPDRS3",
+  #                         "Tremor3_Calculated_NUPDRS3A","Tremor3_Calculated_NUPDR3OF","Tremor3_Calculated_NUPDR3ON","PIGD3_Calculated_NUPDRS3","PIGD3_Calculated_NUPDRS3A","PIGD3_Calculated_NUPDR3OF",
+  #                         "PIGD3_Calculated_NUPDR3ON")
+  # colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   
-  
-  
+  # New Version: Taking ALL UPDRS3 groups + Adding another column for their group name
   # Calculating L/R UPDRS3 values
   PPMI <- PPMI %>% rowwise() %>% 
-    mutate(NP3TOT_NUPDRS3_L = sum(NP3FTAPL_NUPDRS3, NP3HMOVL_NUPDRS3, NP3KTRML_NUPDRS3, NP3LGAGL_NUPDRS3, NP3PRSPL_NUPDRS3, NP3PTRML_NUPDRS3,
-                                  NP3RIGLU_NUPDRS3, NP3RIGLL_NUPDRS3, NP3TTAPL_NUPDRS3, NP3RTALU_NUPDRS3, NP3RTALL_NUPDRS3,  na.rm = FALSE),
-           NP3TOT_NUPDRS3_R = sum(NP3FTAPR_NUPDRS3 , NP3HMOVR_NUPDRS3 , NP3KTRMR_NUPDRS3 , NP3LGAGR_NUPDRS3 , NP3PRSPR_NUPDRS3 , NP3PTRMR_NUPDRS3, 
-                                  NP3RIGRU_NUPDRS3, NP3RIGRL_NUPDRS3, NP3TTAPR_NUPDRS3, NP3RTARU_NUPDRS3, NP3RTARL_NUPDRS3, na.rm = FALSE),
-           NP3TOT_NUPDRS3A_L = sum(NP3FTAPL_NUPDRS3A , NP3HMOVL_NUPDRS3A , NP3KTRML_NUPDRS3A , NP3LGAGL_NUPDRS3A , NP3PRSPL_NUPDRS3A , NP3PTRML_NUPDRS3A, 
-                                   NP3RIGLU_NUPDRS3A, NP3RIGLL_NUPDRS3A, NP3TTAPL_NUPDRS3A, NP3RTALU_NUPDRS3A, NP3RTALL_NUPDRS3A, na.rm = FALSE),
-           NP3TOT_NUPDRS3A_R = sum(NP3FTAPR_NUPDRS3A , NP3HMOVR_NUPDRS3A , NP3KTRMR_NUPDRS3A , NP3LGAGR_NUPDRS3A , NP3PRSPR_NUPDRS3A , NP3PTRMR_NUPDRS3A, 
-                                   NP3RIGRU_NUPDRS3A, NP3RIGRL_NUPDRS3A, NP3TTAPR_NUPDRS3A, NP3RTARU_NUPDRS3A, NP3RTARL_NUPDRS3A, na.rm = FALSE),
-           NP3TOT_NUPDR3OF_L = sum(NP3FTAPL_NUPDR3OF , NP3HMOVL_NUPDR3OF , NP3KTRML_NUPDR3OF , NP3LGAGL_NUPDR3OF , NP3PRSPL_NUPDR3OF , NP3PTRML_NUPDR3OF, 
-                                   NP3RIGLU_NUPDR3OF, NP3RIGLL_NUPDR3OF, NP3TTAPL_NUPDR3OF, NP3RTALU_NUPDR3OF, NP3RTALL_NUPDR3OF, na.rm = FALSE),
-           NP3TOT_NUPDR3OF_R = sum(NP3FTAPR_NUPDR3OF , NP3HMOVR_NUPDR3OF , NP3KTRMR_NUPDR3OF , NP3LGAGR_NUPDR3OF , NP3PRSPR_NUPDR3OF , NP3PTRMR_NUPDR3OF, 
-                                   NP3RIGRU_NUPDR3OF, NP3RIGRL_NUPDR3OF, NP3TTAPR_NUPDR3OF, NP3RTARU_NUPDR3OF, NP3RTARL_NUPDR3OF, na.rm = FALSE),
-           NP3TOT_NUPDR3ON_L = sum(NP3FTAPL_NUPDR3ON , NP3HMOVL_NUPDR3ON , NP3KTRML_NUPDR3ON , NP3LGAGL_NUPDR3ON , NP3PRSPL_NUPDR3ON , NP3PTRML_NUPDR3ON, 
-                                   NP3RIGLU_NUPDR3ON, NP3RIGLL_NUPDR3ON, NP3TTAPL_NUPDR3ON, NP3RTALU_NUPDR3ON, NP3RTALL_NUPDR3ON, na.rm = FALSE),
-           NP3TOT_NUPDR3ON_R = sum(NP3FTAPR_NUPDR3ON , NP3HMOVR_NUPDR3ON , NP3KTRMR_NUPDR3ON , NP3LGAGR_NUPDR3ON , NP3PRSPR_NUPDR3ON , NP3PTRMR_NUPDR3ON, 
-                                   NP3RIGRU_NUPDR3ON, NP3RIGRL_NUPDR3ON, NP3TTAPR_NUPDR3ON, NP3RTARU_NUPDR3ON, NP3RTARL_NUPDR3ON, na.rm = FALSE))
-  PPMI <- PPMI %>% select("PATNO","EVENT_ID","INFODT","NP3TOT_NUPDRS3","NP3TOT_NUPDRS3A","NP3TOT_NUPDR3OF","NP3TOT_NUPDR3ON",
-                          "NP3TOT_NUPDRS3_L","NP3TOT_NUPDRS3_R","NP3TOT_NUPDRS3A_L","NP3TOT_NUPDRS3A_R","NP3TOT_NUPDR3OF_L","NP3TOT_NUPDR3OF_R","NP3TOT_NUPDR3ON_L","NP3TOT_NUPDR3ON_R",
-                          "NP3TOT_Calculated_NUPDRS3","NP3TOT_Calculated_NUPDRS3A","NP3TOT_Calculated_NUPDR3OF","NP3TOT_Calculated_NUPDR3ON","Tremor3_Calculated_NUPDRS3",
-                          "Tremor3_Calculated_NUPDRS3A","Tremor3_Calculated_NUPDR3OF","Tremor3_Calculated_NUPDR3ON","PIGD3_Calculated_NUPDRS3","PIGD3_Calculated_NUPDRS3A","PIGD3_Calculated_NUPDR3OF",
-                          "PIGD3_Calculated_NUPDR3ON")
-  colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
+    mutate(NP3TOT_L = sum(NP3FTAPL, NP3HMOVL, NP3KTRML, NP3LGAGL, NP3PRSPL, NP3PTRML,
+                          NP3RIGLU, NP3RIGLL, NP3TTAPL, NP3RTALU, NP3RTALL,  na.rm = FALSE),
+           NP3TOT_R = sum(NP3FTAPR , NP3HMOVR , NP3KTRMR , NP3LGAGR , NP3PRSPR , NP3PTRMR, 
+                          NP3RIGRU, NP3RIGRL, NP3TTAPR, NP3RTARU, NP3RTARL, na.rm = FALSE))
+  PPMI <- PPMI %>% select("PATNO","EVENT_ID","INFODT",'PAG_NAME',
+                          "NP3TOT",
+                          "NP3TOT_L","NP3TOT_R",
+                          "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated")
+  colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","Visit_Date","UPDRS3_Category")
   
   
   #### CLEANING DUPLICATES ####
@@ -85,9 +99,17 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
     filter(n() > 1) %>% arrange(Patient_Number, Visit_ID, Visit_Date_asDate) 
   PPMI_cor <- data.frame(matrix(nrow = 0, ncol = length(PPMI_temp)))
   colnames(PPMI_cor) <- colnames(PPMI_temp)
+  # Sort based on category first to get the main categories, if available
+  custom_order <- c("NUPDRS3ON", "NUPDRS3OFF",
+                    "NUPDRDOSE3", "NUPDRDOSE3OFF", "NUPDRDOSE3ON",
+                    "NUPDRS3AON", "NUPDRS3AOFF",
+                    "NUPDR3ONON", "NUPDR3ONOFF",
+                    "NUPDR3OFON", "NUPDR3OFOFF")
+  PPMI_temp <- PPMI_temp %>% arrange(Patient_Number, Visit_ID, factor(UPDRS3_Category, levels = custom_order)) %>% 
+    mutate(UPDRS3_Category = as.character(UPDRS3_Category))
   for (i in 1:(dim(PPMI_temp)[1]/2)) {
     PPMI_cor[i,1:length(PPMI_temp)] <- PPMI_temp[(i*2)-1,]
-    PPMI_cor[i,5:length(PPMI_temp)] <- coalesce(as.numeric(PPMI_temp[(i*2)-1,5:length(PPMI_temp)]),as.numeric(PPMI_temp[i*2,5:length(PPMI_temp)])) #can use coalesce since all columns are numbers
+    PPMI_cor[i,6:length(PPMI_temp)] <- coalesce(as.numeric(PPMI_temp[(i*2)-1,6:length(PPMI_temp)]),as.numeric(PPMI_temp[i*2,6:length(PPMI_temp)])) #can use coalesce since all columns are numbers
   }
   PPMI_cor <- PPMI_cor %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
   # removing problematic rows from main file -> adding corrected rows -> rearrange
