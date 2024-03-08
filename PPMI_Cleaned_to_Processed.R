@@ -34,9 +34,12 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   #CALCULATE NUPDRS TOTAL HERE
   UPDRS_PartI <- PPMI$NP1TOT_Calculated
   UPDRS_PartII <- PPMI$NP2TOT_Calculated
-  UPDRS_PartIII <- PPMI$NP3TOT_Calculated
+  UPDRS_PartIII <- PPMI$NP3TOT
+  UPDRS_PartIII_Calculated <- PPMI$NP3TOT_Calculated
   UPDRS_Total_Score <- rowSums(cbind(UPDRS_PartI, UPDRS_PartII, UPDRS_PartIII))
+  UPDRS_PartIII_Left_Calculated <- PPMI$NP3TOT_Calculated_L
   UPDRS_PartIII_Left <- PPMI$NP3TOT_L
+  UPDRS_PartIII_Right_Calculated <- PPMI$NP3TOT_Calculated_R
   UPDRS_PartIII_Right <- PPMI$NP3TOT_R
   
   
@@ -111,6 +114,9 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI$UPDRS_Total_Score <- UPDRS_Total_Score
   PPMI$UPDRS_PartIII_Left <- UPDRS_PartIII_Left
   PPMI$UPDRS_PartIII_Right <- UPDRS_PartIII_Right
+  PPMI$UPDRS_PartIII_Calculated <- UPDRS_PartIII_Calculated
+  PPMI$UPDRS_PartIII_Left_Calculated <- UPDRS_PartIII_Left_Calculated
+  PPMI$UPDRS_PartIII_Right_Calculated <- UPDRS_PartIII_Right_Calculated
   PPMI$RBD_Score <- RBD_Score
   PPMI$UPSIT_Score <- UPSIT_Score
   PPMI$SCOPA_AUT_Score <- SCOPA_AUT_Score
@@ -161,7 +167,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   # These ones are available separately in the bio file: "Abeta.42","CSF.Alpha.synuclein","p.Tau181P","Total.tau","rs34637584_LRRK2_p.G2019S","rs76763715_GBA_p.N370S"
   PPMI <- PPMI %>% select("Patient_Number", "Visit_ID", "Visit_Date_asDate", "Age_at_Visit", "BL_Age", "BIRTHDT_asDate",
                           "BL_Date", "Days_from_BL", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "SEX", "EDUCYRS", "HANDED",
-                          "UPDRS_PartI", "UPDRS_PartII", "UPDRS_PartIII", "UPDRS_PartIII_Left", "UPDRS_PartIII_Right", "UPDRS3_Category", "UPDRS_Total_Score",
+                          "UPDRS_PartI", "UPDRS_PartII", "UPDRS_PartIII", "UPDRS_PartIII_Calculated", "UPDRS_PartIII_Left", "UPDRS_PartIII_Left_Calculated", "UPDRS_PartIII_Right", "UPDRS_PartIII_Right_Calculated", "UPDRS3_Category", "UPDRS_Total_Score",
                           "MSEADLG", "Tremor_score", "PIGD_score", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", 
                           "SCOPA_AUT_Score", "STAI_State_Score", "STAI_Trait_Score", "STAI_Total_Score", "UPSIT_Score",
                           "JLO_TOTRAW", "JLO_TOTCALC", "DVS_JLO_MSSA", "DVS_JLO_MSSAE", 
@@ -185,7 +191,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   # DayDiff_Visit_Baseline -> Day_Diff (Shows day difference of this visit from Baseline)
   new_names <- c("Patient_ID", "Visit_ID", "Visit_Date", "Age", "Age_Baseline", "Birthdate",
                  "Baseline_Date", "DayDiff", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "Sex" , "Education_Years", "Handedness",
-                 "UPDRS_Part_I", "UPDRS_Part_II", "UPDRS_Part_III", "UPDRS_Part_III_Left", "UPDRS_Part_III_Right", "UPDRS_PartIII_Category", "UPDRS_Total_Score",
+                 "UPDRS_Part_I", "UPDRS_Part_II", "UPDRS_Part_III", "UPDRS_Part_III_Calculated", "UPDRS_Part_III_Left", "UPDRS_Part_III_Left_Calculated", "UPDRS_Part_III_Right", "UPDRS_Part_III_Right_Calculated", "UPDRS_PartIII_Category", "UPDRS_Total_Score",
                  "Schwab_England", "Tremor", "PIGD", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", 
                  "SCOPA_AUT", "STAI_State", "STAI_Trait", "STAI_Total", "UPSIT_Score", 
                  "Benton_Line_Sum", "Benton_Line_Calculated_Sum", "Benton_MOANS_Age", "Benton_MOANS_Age_educ",
@@ -225,6 +231,62 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI <- PPMI %>% mutate(Clinical_Features_Dysautonomia = SCOPA_AUT) %>% relocate(Clinical_Features_Dysautonomia, .after = UPDRS_Total_Score)
   
   
+  
+  
+  ######## Add LEDD and LDOPA for each date ########
+  LEDD <- read.csv("Data_Wide/LEDD_Concomitant_Medication_Log_wide.csv", sep=",", header = T)
+  colnames(LEDD)[1] <- 'Patient_ID'
+  LEDD <- LEDD %>% mutate(Medication_Start_Date = as.Date(Medication_Start_Date, format = "%Y-%m-%d"))
+  # add end date for each medication period to make comparisons easier
+  LEDD <- LEDD %>%
+    group_by(Patient_ID) %>%
+    mutate(Next_Medication_Start_Date = lead(Medication_Start_Date, default = as.Date("9999-12-31"))) %>%
+    ungroup()
+  # add start and end date of medication for each participant
+  LEDD <- LEDD %>% 
+    group_by(Patient_ID) %>% 
+    mutate(Initial_Medication_Date = min(Medication_Start_Date)) %>% 
+    mutate(Final_Medication_Date = max(Next_Medication_Start_Date)) %>% 
+    ungroup()
+  # add LEDD and LDOPA in their places
+  PPMI$LDOPA_Equivalent_LEDD <- NA
+  PPMI$LDOPA_Dose <- NA
+  PPMI$LDOPA_Medication_Start_Date <- as.Date(NA)
+  PPMI$LDOPA_Medication_End_Date <- as.Date(NA)
+  for (i in 1:nrow(PPMI)) {
+    current_patient_id <- PPMI$Patient_ID[i]
+    current_visit_date <- as.Date(PPMI$Visit_Date[i])
+    # Filter LEDD for rows with the same Patient_ID and where Visit_Date falls within the range
+    patient_ledd_data <- LEDD %>%
+      filter(Patient_ID == current_patient_id,
+             Medication_Start_Date <= current_visit_date,
+             Next_Medication_Start_Date > current_visit_date)
+    # If there is a matching row, update PPMI with LEDD values
+    if (nrow(patient_ledd_data) == 1) {
+      PPMI$LDOPA_Equivalent_LEDD[i] <- patient_ledd_data$LEDD
+      PPMI$LDOPA_Dose[i] <- patient_ledd_data$LDOPA
+      PPMI$LDOPA_Medication_Start_Date[i] <- patient_ledd_data$Initial_Medication_Date
+      PPMI$LDOPA_Medication_End_Date[i] <- patient_ledd_data$Final_Medication_Date
+    } else if (nrow(patient_ledd_data) > 1) {
+      warning("More than one LEDD entry found for Patient_ID", current_patient_id, " on Visit_Date ", current_visit_date)
+    }
+    rm(current_patient_id, current_visit_date,patient_ledd_data)
+  }
+  PPMI <- PPMI %>% relocate(LDOPA_Equivalent_LEDD, .after = Rev_Neuropsych_Test)
+  PPMI <- PPMI %>% relocate(LDOPA_Dose, .after = LDOPA_Equivalent_LEDD)
+  PPMI <- PPMI %>% relocate(LDOPA_Medication_Start_Date, .after = LDOPA_Dose)
+  PPMI <- PPMI %>% relocate(LDOPA_Medication_End_Date, .after = LDOPA_Medication_Start_Date)
+  
+  
+  
+  # Add dates as only numbers as well (ex. 2012-08-23 to 20120823)
+  PPMI <- PPMI %>% 
+    mutate(Visit_Date_n = gsub("-", "", Visit_Date)) %>% relocate(Visit_Date_n, .after = Visit_Date) %>% 
+    mutate(Birthdate_n = gsub("-", "", Birthdate)) %>% relocate(Birthdate_n, .after = Birthdate) %>% 
+    mutate(Baseline_Date_n = gsub("-", "", Baseline_Date)) %>% relocate(Baseline_Date_n, .after = Baseline_Date) %>% 
+    mutate(Symptom_Date_n = gsub("-", "", Symptom_Date)) %>% relocate(Symptom_Date_n, .after = Symptom_Date) %>% 
+    mutate(LDOPA_Medication_Start_Date_n = gsub("-", "", LDOPA_Medication_Start_Date)) %>% relocate(LDOPA_Medication_Start_Date_n, .after = LDOPA_Medication_Start_Date) %>% 
+    mutate(LDOPA_Medication_End_Date_n = gsub("-", "", LDOPA_Medication_End_Date)) %>% relocate(LDOPA_Medication_End_Date_n, .after = LDOPA_Medication_End_Date)
   
   
   # Save

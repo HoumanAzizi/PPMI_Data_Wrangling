@@ -23,7 +23,7 @@ PPMI_FinalMerge <- function(folder_path) {
   
   
   
-  return("COMPLETED FINAL STEP 7: Merged Processed Imaging and Behavioral Data - Final filename: PPMI_Merged_FINAL.csv")
+  return("COMPLETED STEP 7: Merged Processed Imaging and Behavioral Data - Final filename: PPMI_Merged_FINAL.csv")
 }
   
 

@@ -9,6 +9,7 @@ library(reshape2)
 library(hablar)
 library(data.table)
 library(stringr)
+library(readr)
 
 rm(list = ls())
 cat("\014")
@@ -55,6 +56,8 @@ source("PPMI_Wide_to_Processed_Bio.R")
 source("PPMI_Cleaned_to_Processed.R")
 source("PPMI_Cleaned_to_Processed_Imaging.R")
 source("PPMI_Merge_Final.R")
+source("PPMI_AllMeasure_Merge.R")
+
 
 
 
@@ -100,6 +103,9 @@ print(result6)
 result7 <- PPMI_FinalMerge(folder_path)
 print(result7)
 
-
+# Merges ALL the files to be final
+# Produces a final file to use: PPMI_Merged_AllMeasures_AllVisits_FINAL.csv
+result8 <- PPMI_ALL_Merge_Final(folder_path)
+print(result8)
 
 

@@ -1,6 +1,7 @@
 # Created by Houman Azizi
 # Gets raw PPMI data and turns them into the wide version using only the desired variables
 # Also does some calculations for some measures such as UPDRS3
+# Does calculation of LDOPA and LEDD based on Script 7 of PPMI
 
 PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
@@ -96,30 +97,51 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   # creating asDate column first
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
   # getting only the problematic rows -> fixing them
-  PPMI_temp <- PPMI %>% group_by(Patient_Number, Visit_ID) %>% 
+  PPMI_temp <- PPMI %>% group_by(Patient_Number, Visit_ID) %>% #UPDRS3_Category
     filter(n() > 1) %>% arrange(Patient_Number, Visit_ID, Visit_Date_asDate) 
   PPMI_cor <- data.frame(matrix(nrow = 0, ncol = length(PPMI_temp)))
   colnames(PPMI_cor) <- colnames(PPMI_temp)
   # Sort based on category first to get the main categories, if available
-  custom_order <- c("NUPDRS3ON", "NUPDRS3OFF",
-                    "NUPDRDOSE3", "NUPDRDOSE3OFF", "NUPDRDOSE3ON",
-                    "NUPDRS3AON", "NUPDRS3AOFF",
-                    "NUPDR3ONON", "NUPDR3ONOFF",
-                    "NUPDR3OFON", "NUPDR3OFOFF")
+  custom_order <- c("NUPDRS3", "NUPDRS3ON", "NUPDRS3OFF",
+                    "NUPDRDOSE3", "NUPDRDOSE3ON", "NUPDRDOSE3OFF",
+                    "NUPDRS3A", "NUPDRS3AON", "NUPDRS3AOFF",
+                    "NUPDR3ON", "NUPDR3ONON", "NUPDR3ONOFF",
+                    "NUPDR3OF", "NUPDR3OFON", "NUPDR3OFOFF")
+
   PPMI_temp <- PPMI_temp %>% arrange(Patient_Number, Visit_ID, factor(UPDRS3_Category, levels = custom_order)) %>% 
     mutate(UPDRS3_Category = as.character(UPDRS3_Category))
+  # remove any 3rd extra column
+  PPMI_temp <- PPMI_temp %>%
+    group_by(Patient_Number, Visit_ID) %>%
+    slice(1:2)
+  # if for a Patient_Number-Visit_ID combination there is a row with NP3TOT not being NA, keep that
+  PPMI_cor_nonNA <- PPMI_temp %>% group_by(Patient_Number, Visit_ID) %>% 
+    mutate(isNA = case_when(is.na(NP3TOT) ~ 1, TRUE ~ 0)) %>% 
+    mutate(isNA_all = sum(isNA))
+  PPMI_temp <- PPMI_cor_nonNA %>% filter(isNA_all != 1) %>% select(-isNA, -isNA_all) # this has the rows with duplicated - needs to be processed again below
+  PPMI_cor_nonNA <- PPMI_cor_nonNA %>% filter(isNA_all == 1) %>% filter(!is.na(NP3TOT)) %>% select(-isNA, -isNA_all) # this has the correct row if one of the duplicate's NP3TOT was NA
   for (i in 1:(dim(PPMI_temp)[1]/2)) {
     PPMI_cor[i,1:length(PPMI_temp)] <- PPMI_temp[(i*2)-1,]
     PPMI_cor[i,6:length(PPMI_temp)] <- coalesce(as.numeric(PPMI_temp[(i*2)-1,6:length(PPMI_temp)]),as.numeric(PPMI_temp[i*2,6:length(PPMI_temp)])) #can use coalesce since all columns are numbers
   }
+  PPMI_cor <- rbind(PPMI_cor,PPMI_cor_nonNA)
   PPMI_cor <- PPMI_cor %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
   # removing problematic rows from main file -> adding corrected rows -> rearrange
+  PPMI <- as.data.frame(PPMI)
   PPMI <- PPMI %>% filter(!(paste0(Patient_Number,Visit_ID) %in% paste0(PPMI_cor$Patient_Number,PPMI_cor$Visit_ID)))
   PPMI <- rbind(PPMI,PPMI_cor)
+  PPMI <- PPMI[!is.na(PPMI$Patient_Number),]
   PPMI$Patient_Number <- as.numeric(PPMI$Patient_Number)
+  PPMI[is.na(PPMI)] <- NA
+  # Separate calculated and regular L and R NO3TOTs
+  PPMI$NP3TOT_Calculated_L <- PPMI$NP3TOT_L
+  PPMI$NP3TOT_Calculated_R <- PPMI$NP3TOT_R
+  PPMI$NP3TOT_L[is.na(PPMI$NP3TOT)] <- NA
+  PPMI$NP3TOT_R[is.na(PPMI$NP3TOT)] <- NA
+  
   # saving wide file
-  write.csv(PPMI, "../Data_Wide/MDS_UPDRS_Part_III_wide.csv", row.names=FALSE)
-  PPMI <- read.csv("../Data_Wide/MDS_UPDRS_Part_III_wide.csv", sep=",", header = T)
+  # write.csv(PPMI, "../Data_Wide/MDS_UPDRS_Part_III_wide.csv", row.names=FALSE)
+  # PPMI <- read.csv("../Data_Wide/MDS_UPDRS_Part_III_wide.csv", sep=",", header = T)
   PPMI <- PPMI %>% arrange(Patient_Number,Visit_Date_asDate)
   write.csv(PPMI, "../Data_Wide/MDS_UPDRS_Part_III_wide.csv", row.names=FALSE)
   
@@ -249,7 +271,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   ## CLEANING DUPLICATES ##
   PPMI_cor <- PPMI %>% group_by(Patient_Number, Visit_ID) %>% 
     filter(n() > 1) %>% arrange(Patient_Number,Visit_Date_asDate) %>% 
-    mutate(remove = case_when(JLO_PAG_NAME=="BENTONOD" ~ TRUE)) #%>% filter(is.na(remove))
+    mutate(remove = case_when(JLO_PAG_NAME=="BENTONOD" ~ TRUE)) %>% filter(is.na(remove))
   PPMI_cor <- PPMI_cor[,-length(PPMI_cor)]
   PPMI <- PPMI %>% filter(!(paste0(Patient_Number,Visit_ID) %in% paste0(PPMI_cor$Patient_Number,PPMI_cor$Visit_ID)))
   PPMI <- rbind(PPMI,PPMI_cor) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -438,7 +460,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   
   ######## University_of_Pennsylvania_Smell_Identification_Test__UPSIT_.csv ########
-  UPSIT <- read.csv(paste0(raw_path,"University_of_Pennsylvania_Smell_Identification_Test__UPSIT__",download_date,".csv"), sep=",", header = T)
+  UPSIT <- read.csv(paste0(raw_path,"University_of_Pennsylvania_Smell_Identification_Test_UPSIT_",download_date,".csv"), sep=",", header = T)
   PPMI <- UPSIT %>% select("PATNO","EVENT_ID","INFODT","UPSIT_PRCNTGE","TOTAL_CORRECT","UPSITFORM")
   colnames(PPMI) <- c("Patient_Number","Visit_ID","Visit_Date","UPSIT_PRCNTGE","UPSIT_TOTAL_CORRECT","UPSITFORM")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
@@ -640,8 +662,77 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   PPMI <- PPMI %>% mutate(ApoE_Genotype = coalesce(PPMI$`ApoE Genotype`,PPMI$`APOE GENOTYPE`)) %>% select(-c(`APOE GENOTYPE`,`ApoE Genotype`)) %>% 
     mutate(ApoE_Genotype_1 = substr(ApoE_Genotype,2,2), ApoE_Genotype_2 = substr(ApoE_Genotype,5,5))
   write.csv(PPMI, "../Data_Wide/Current_Biospecimen_Analysis_Results_wide.csv", row.names=FALSE)
+  cat("\014")
+  
+  
+  
+  
+  ######## LEDD_Concomitant_Medication_Log.csv ########
+  LEDD_Concomitant_Medication_Log <- read.csv(paste0(raw_path,"LEDD_Concomitant_Medication_Log_",download_date,".csv"), sep=",", header = T)
+  # Tidy up date formats
+  LEDD_Concomitant_Medication_Log <- LEDD_Concomitant_Medication_Log %>% 
+    mutate(STARTDT = as.Date(paste("01/", as.character(STARTDT)), "%d/%m/%Y")) %>% 
+    mutate(STOPDT = as.Date(paste("01/", as.character(STOPDT)), "%d/%m/%Y"))
+  # Get the set of unique dates when LEDD changes for each PATNO
+  LEDD <- unique(rbind(LEDD_Concomitant_Medication_Log %>% select(PATNO, STARTDT),
+                       LEDD_Concomitant_Medication_Log %>% select(PATNO, STARTDT = STOPDT) %>%
+                         filter(!is.na(STARTDT)))) %>% arrange (PATNO, STARTDT)
+  # Get the base L-Dopa value at each point in time
+  LDOPA_VALUES <- LEDD_Concomitant_Medication_Log[str_detect(LEDD_Concomitant_Medication_Log$LEDTRT,regex("LEV|DOPA|RYTARY|MADOPAR|SINIMET",ignore_case=TRUE)),] %>%
+    select(PATNO,STARTDT,STOPDT,LEDD) %>%
+    mutate(LEDD2 = case_when (is.na(LEDD) ~ 0.0, str_detect (LEDD, "LD") ~ 0.0, TRUE ~ as.double(as.character(LEDD))))
+  LEDD <- left_join (LEDD, left_join(LEDD, LDOPA_VALUES, by="PATNO") %>% 
+                       filter(STARTDT.y <= STARTDT.x & (is.na(STOPDT) | (STOPDT > STARTDT.x & STOPDT > STARTDT.y))) %>%
+                       mutate (LEDD2 = case_when (is.na(LEDD2) ~ as.double (0.0), TRUE ~ LEDD2)) %>%
+                       group_by(PATNO,STARTDT.x) %>%
+                       summarize (LDOPA = sum(LEDD2), .groups = "drop") %>%
+                       rename (STARTDT = STARTDT.x), by = c("PATNO","STARTDT"))
+  # Get the base LEDD value at each point in time
+  LEDD_VALUES <- mutate(LEDD_Concomitant_Medication_Log, LEDD2 = case_when (is.na(LEDD) ~ 0.0, str_detect (LEDD, "LD") ~ 0.0, TRUE ~ as.numeric(as.character(LEDD))))
+  LEDD <- left_join (LEDD,
+                     left_join(LEDD, LEDD_VALUES, by="PATNO") %>%
+                       filter(STARTDT.y <= STARTDT.x & (is.na(STOPDT) | (STOPDT > STARTDT.x & STOPDT > STARTDT.y)) & !is.na(LEDD2)) %>%
+                       group_by(PATNO,STARTDT.x) %>%
+                       summarize (LEDD = sum(LEDD2), .groups = "drop") %>%
+                       rename (STARTDT = STARTDT.x), by = c("PATNO","STARTDT"))
+  # Update base LEDD value for drugs with LEDD profile of the form LD * A
+  VALUES_TO_UPDATE <- LEDD_Concomitant_Medication_Log %>%
+    filter (substr(LEDD,1,4) =="LD x") %>%
+    select (PATNO, STARTDT,STOPDT, LEDD) %>%
+    mutate (FACTOR = as.double(str_match(LEDD, "\\d+\\.\\d+$")))
+  LEDD <- left_join (LEDD, left_join(LEDD, VALUES_TO_UPDATE, by="PATNO") %>%
+                       filter(STARTDT.y <= STARTDT.x & (is.na(STOPDT) | (STOPDT > STARTDT.x & STOPDT > STARTDT.y))) %>%
+                       group_by(PATNO,STARTDT.x) %>%
+                       summarize (FACTOR1 = sum(FACTOR), .groups = "drop") %>%
+                       rename (STARTDT = STARTDT.x), by = c("PATNO","STARTDT"))
+  # Update base LEDD value for drugs with LEDD profile of the form (B + LD) x A
+  VALUES_TO_UPDATE <- LEDD_Concomitant_Medication_Log %>%
+    filter (str_detect(LEDD,"\\+\\ LD")) %>%
+    select (PATNO, STARTDT,STOPDT, LEDD) %>%
+    mutate (FACTOR2 = as.double(str_match(LEDD, "\\d+\\.\\d+")),
+            FACTOR3 = as.double(str_match(LEDD, "\\d+\\.\\d+$")),
+            FACTOR4 = as.double(str_match(LEDD, "\\d+\\.\\d+$")))
+  LEDD <- left_join (LEDD, left_join(LEDD, VALUES_TO_UPDATE, by="PATNO") %>%
+                       filter(STARTDT.y <= STARTDT.x & (is.na(STOPDT) | (STOPDT > STARTDT.x & STOPDT > STARTDT.y))) %>%
+                       group_by(PATNO,STARTDT.x) %>%
+                       summarize (FACTOR2 = sum(FACTOR2), FACTOR3 = mean(FACTOR3),FACTOR4 = sum(FACTOR4), .groups = "drop") %>% 
+                       rename (STARTDT = STARTDT.x), by = c("PATNO","STARTDT"))
+  # Tidy up null values and make final calculations
+  LEDD <- mutate (LEDD, LDOPA = case_when(is.na(LDOPA) ~ 0.0, TRUE ~ LDOPA), LEDD = case_when(is.na(LEDD) ~ 0.0, TRUE ~ LEDD))
+  LEDD <- mutate (LEDD, LEDD = LEDD
+                  + case_when(!is.na(FACTOR1) ~ FACTOR1 * LDOPA, TRUE ~ 0.0)
+                  + case_when(!is.na(FACTOR2) ~ (FACTOR2 * FACTOR3) + (LDOPA * FACTOR4), TRUE ~ 0.0)) %>%
+    select (-FACTOR1, -FACTOR2, -FACTOR3, -FACTOR4)
+  # Save
+  colnames(LEDD) <- c("Patient_Number","Medication_Start_Date","LDOPA","LEDD")
+  write.csv(LEDD, "../Data_Wide/LEDD_Concomitant_Medication_Log_wide.csv", row.names=FALSE)
   rm(list = ls())
   cat("\014")
+  
+  
+  
+  
+  
   
   
   
