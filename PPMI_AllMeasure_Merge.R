@@ -2,7 +2,7 @@ PPMI_ALL_Merge_Final <- function(folder_path) {
   
   setwd(folder_path)
   
-  PPMI <- read.csv("PPMI_Merged_FINAL_AllVisits.csv", sep=",", header = T)
+  PPMI <- read.csv("PPMI_allVisits_cleaned_processed.csv", sep=",", header = T)
   imaging <- read.csv("PPMI_Imaging_All_cleaned_processed.csv", sep=",", header = T)
   bio <- read.csv("PPMI_Bio_cleaned_processed.csv", sep=",", header = T)
   MRI <- read.csv("PPMI_07Dec2023_MRI_List.csv", sep=",", header = F)
@@ -37,11 +37,13 @@ PPMI_ALL_Merge_Final <- function(folder_path) {
   PET <- imaging %>% select("Patient_ID", "Visit_ID", "DayDiff_PET", "AV133_RCAUD_S", "AV133_RPUTANT_S", 
                             "AV133_RPUTPOST_S", "AV133_LCAUD_S", "AV133_LPUTANT_S", "AV133_LPUTPOST_S" ) %>% filter(!is.na(DayDiff_PET))
   MRI <- MRI %>% select('Patient_ID', 'Visit_ID_Match', 'MRI_Date', 'DayDiff_MRI')
+  DAT <- imaging %>% select(Patient_ID, Visit_ID, DayDiff_DAT, starts_with('DAT')) %>% filter(!is.na(DayDiff_DAT))
   colnames(MRI) <- c('Patient_ID', 'Visit_ID', 'MRI_Scan_Date', 'DayDiff_MRI')
   
   
   PPMI <- PPMI %>% left_join(MRI, by = c("Patient_ID", "Visit_ID"))
   PPMI <- PPMI %>% left_join(PET, by = c("Patient_ID", "Visit_ID"))
+  PPMI <- PPMI %>% left_join(DAT, by = c("Patient_ID", "Visit_ID"))
   PPMI <- PPMI %>% left_join(bio, by = c("Patient_ID", "Visit_ID"))
   
   
@@ -57,7 +59,7 @@ PPMI_ALL_Merge_Final <- function(folder_path) {
   PPMI_matlab[is.na(PPMI_matlab)] <- NaN
   write.csv(PPMI,paste0(folder_path,"PPMI_Merged_AllMeasures_AllVisits_FINAL_vMATLAB.csv"), row.names=FALSE)
   
-  return("COMPLETED STEP 8: Merged ALL the data together - Final filename: PPMI_Merged_AllMeasures_AllVisits_FINAL.csv")
+  return("COMPLETED FINAL STEP: Merged ALL the data together - Final filename: PPMI_Merged_AllMeasures_AllVisits_FINAL.csv")
   
 }
 

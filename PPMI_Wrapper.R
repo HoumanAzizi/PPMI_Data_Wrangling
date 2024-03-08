@@ -55,7 +55,6 @@ source("PPMI_Wide_to_Cleaned_Imaging.R")
 source("PPMI_Wide_to_Processed_Bio.R")
 source("PPMI_Cleaned_to_Processed.R")
 source("PPMI_Cleaned_to_Processed_Imaging.R")
-source("PPMI_Merge_Final.R")
 source("PPMI_AllMeasure_Merge.R")
 
 
@@ -98,14 +97,17 @@ print(result5)
 result6 <- PPMI_Cleaned_to_Processed_Imaging(folder_path)
 print(result6)
 
-# Merges processed behavioral and imaging data
-# Produces 3 final files to use: PPMI_Merged_FINAL_AllVisits.csv, PPMI_Merged_FINAL_RegularVisits.csv, PPMI_Merged_FINAL_ExtraVisits.csv
-result7 <- PPMI_FinalMerge(folder_path)
-print(result7)
-
 # Merges ALL the files to be final
 # Produces a final file to use: PPMI_Merged_AllMeasures_AllVisits_FINAL.csv
-result8 <- PPMI_ALL_Merge_Final(folder_path)
-print(result8)
+result7 <- PPMI_ALL_Merge_Final(folder_path)
+print(result7)
 
+
+
+
+
+######## Optional: Helper / Additional Scripts ########
+# Calculates percentage of missing values per visit for each measure and also for all visits together
+source("PPMI_EXTRA_Calculating_Missing_Value_Percentages.R")
+addon_1_result <- PPMI_EXTRA_Calculating_Missing_Value_Percentages(folder_path)
 

@@ -17,9 +17,12 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   # Symptom duration in YEARS
   PPMI$PDDXDT <- as.Date(paste0("01/",PPMI$PDDXDT),"%d/%m/%Y")
   PPMI$SXDT <- as.Date(paste0("01/",PPMI$SXDT),"%d/%m/%Y")
-  Symptom_duration <- difftime(PPMI$Enroll_Date_asDate,PPMI$SXDT, units = "days")
+  Symptom_duration <- difftime(PPMI$Visit_Date_asDate,PPMI$SXDT, units = "days")
   Symptom_duration <- Symptom_duration/365 #previously /(3600*24*365)
   Symptom_duration <- as.numeric(Symptom_duration)
+  PD_diag_duration_Years <- difftime(PPMI$Visit_Date_asDate,PPMI$PDDXDT, units = "days")
+  PD_diag_duration_Years <- PD_diag_duration_Years/365 #previously /(3600*24*365)
+  PD_diag_duration_Years <- as.numeric(PD_diag_duration_Years)
   
   BP_Sys_drop <- PPMI$SYSSUP - PPMI$SYSSTND
   
@@ -105,7 +108,8 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   
   # Adding calculated data
   PPMI$BP_Sys_drop <- BP_Sys_drop
-  PPMI$Symptom_duration <- Symptom_duration
+  PPMI$Symptom_duration_years <- Symptom_duration
+  PPMI$PD_diag_duration_years <- PD_diag_duration_Years
   PPMI$Tremor_score <- Tremor_score
   PPMI$PIGD_score <- PIGD_score
   PPMI$UPDRS_PartI <- UPDRS_PartI
@@ -179,7 +183,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                           "Albumin.QT", "Alkaline.Phosphatase.QT", "ALT..SGPT.", "AST..SGOT.", "Serum.Glucose", "Serum.Uric.Acid",
                           "Total.Protein", "Urea.Nitrogen", "TOPRRSLT", "TGLCRSLT", 
                           "WGTKG", "HTCM", "TEMPC", "DIASUP", "HRSUP", "DIASTND", "HRSTND", "BP_Sys_drop", 
-                          "SXDT", "Symptom_duration", "DXTREMOR", "DXRIGID", "DXBRADY", "DXPOSINS", "DXOTHSX",
+                          "SXDT", "Symptom_duration_years", "PD_diag_duration_years", "DXTREMOR", "DXRIGID", "DXBRADY", "DXPOSINS", "DXOTHSX",
                           "HISPLAT", "RAINDALS", "RAASIAN", "RABLACK", "RAHAWOPI", "RAWHITE", "BIOMOMPD", "BIODADPD",
                           "FULSIBPD", "HAFSIBPD", "MAGPARPD", "PAGPARPD", "MATAUPD", "PATAUPD",
                           "Cohort_n", "SEX_n",
@@ -203,7 +207,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                  "Blood_Albumin", "Blood_ALK_P", "Blood_ALT", "Blood_AST", "Blood_Glucose", "Blood_Uric_Acid",
                  "Blood_Total_Protein", "Blood_Urea_Nitrogen", "Blood_Total_Protein_CSF", "Blood_Total_Glocuse_CSF",
                  "Weight", "Height", "Temperature", "BP_Dias_Sup", "HR_Sup", "BP_Dias_Stand", "HR_Stand", "BP_Sys_drop",
-                 "Symptom_Date", "Symptom_Duration", "Diag_Rest_Tremor", "Diag_Rigidity", "Diag_Bradykinesia", "Diag_Postural_Instability", "Diag_Other_Symptoms",
+                 "Symptom_Date", "Symptom_duration_years", "PD_diag_duration_years", "Diag_Rest_Tremor", "Diag_Rigidity", "Diag_Bradykinesia", "Diag_Postural_Instability", "Diag_Other_Symptoms",
                  "Race_Hispanic", "Race_Indian", "Race_Asian", "Race_Black", "Race_Hawaiian", "Race_White", "PDHistory_Mother", "PDHistory_Father",
                  "PDHistory_Full_Siblings", "PDHistory_Half_Sibling", "PDHistory_Maternal_GP", "PDHistory_Paternal_GP", "PDHistory_Maternal_AU", "PDHistory_Paternal_AU",
                  "Cohort_Number", "Sex_Number",
@@ -288,6 +292,15 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
     mutate(LDOPA_Medication_Start_Date_n = gsub("-", "", LDOPA_Medication_Start_Date)) %>% relocate(LDOPA_Medication_Start_Date_n, .after = LDOPA_Medication_Start_Date) %>% 
     mutate(LDOPA_Medication_End_Date_n = gsub("-", "", LDOPA_Medication_End_Date)) %>% relocate(LDOPA_Medication_End_Date_n, .after = LDOPA_Medication_End_Date)
   
+  # Turn any NaN to NA
+  PPMI <- PPMI %>% mutate_all(~replace(., is.nan(.), NA))
+  
+  # Create 6 month visits
+  PPMI <- PPMI %>% mutate(Visit_ID_6Months_tmp = ceiling(DayDiff/180))
+  PPMI <- PPMI %>% mutate(Visit_ID_6Months = case_when(Visit_ID_6Months_tmp==0 | Visit_ID_6Months_tmp==1 ~ 'BL',
+                                                       Visit_ID_6Months_tmp < 10 ~ paste0('V0', Visit_ID_6Months_tmp),
+                                                       TRUE ~ paste0('V', Visit_ID_6Months_tmp)))
+  PPMI <- PPMI %>% select(-Visit_ID_6Months_tmp) %>% relocate(Visit_ID_6Months, .after = Visit_ID)
   
   # Save
   setwd(folder_path)
