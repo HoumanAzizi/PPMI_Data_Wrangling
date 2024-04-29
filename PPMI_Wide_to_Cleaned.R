@@ -36,7 +36,8 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
     colnames(PPMI_cor) <- c(colnames(PPMI_temp), paste0(filename,"_Delay_Days"))
     for (i in 1:(dim(PPMI_temp)[1]/2)) {
       temp <- rbind(PPMI_temp[(i*2)-1,1:length(PPMI_temp)],PPMI_temp[i*2,1:length(PPMI_temp)])
-      PPMI_cor[i,1:length(PPMI_temp)] <- setDT(temp)[, lapply(.SD,na.omit)][1] #these 2 lines do the merge for the rows existing in temp
+      PPMI_cor[i,1:length(PPMI_temp)] <- setDT(temp)[, lapply(.SD, function(x) ifelse(is.na(x[1]), x[2], x))] #these 2 lines do the merge for the rows existing in temp
+      # PPMI_cor[i,1:length(PPMI_temp)] <- setDT(temp)[, lapply(.SD,na.omit)][1] #older version - not working
       
       PPMI_cor[i,length(PPMI_cor)] <- PPMI_temp$Visit_Date_asDate[(i*2)]
     }
@@ -416,7 +417,8 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
     beh_BLSC$SC_Delay_Days[(i*2)-1] <- beh_BLSC$Days_from_BL[i*2]
     
     temp <- rbind(beh_BLSC[(i*2)-1,],beh_BLSC[i*2,])
-    beh_BL[i,] <- setDT(temp)[, lapply(.SD,na.omit)][1]
+    beh_BL[i,] <- setDT(temp)[, lapply(.SD, function(x) ifelse(is.na(x[1]), x[2], x))]
+    # beh_BL[i,] <- setDT(temp)[, lapply(.SD,na.omit)][1] # older version - does not work
   }
   # replacing BLs instead of BL/SCs
   PPMI <- PPMI %>% filter(!(paste0(Patient_Number,Visit_ID) %in% paste0(beh_BLSC$Patient_Number,beh_BLSC$Visit_ID)))

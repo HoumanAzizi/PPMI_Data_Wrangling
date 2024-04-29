@@ -208,7 +208,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   cat("\014")
   
   ######## MRI_Metadata.csv ########
-  MRI <- read.csv(paste0(raw_path,"MRI_Metadata_",download_date,".csv"), sep=",", header = T)
+  MRI <- read.csv(paste0(raw_path,"MRI_Acquisition_Metadata_",download_date,".csv"), sep=",", header = T)
   PPMI <- MRI %>% select("PATNO","MRI_SCAN_DATE","MRI_SCAN_QUALITY_RATING","MRI_SEQ_DTI","MRI_SEQ_RS","MRI_SEQ_T1_WEIGHTED","MRI_SEQ_T2_WEIGHTED")
   colnames(PPMI) <- c("Patient_Number","MRI_Scan_Date_Metadata","MRI_Scan_Quality","DTI_Available","RS_Available","T1w_Available","T2w_Available")
   PPMI[PPMI == ''] <- NA
@@ -236,7 +236,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   cat("\014")
   
   ######## DaTScan_Metadata.csv ########
-  DaT <- read.csv(paste0(raw_path,"DaTScan_Metadata_",download_date,".csv"), sep=",", header = T)
+  DaT <- read.csv(paste0(raw_path,"DaTScan_Acquisition_Metadata_",download_date,".csv"), sep=",", header = T)
   PPMI <- DaT %>% select("PATNO","EVENT_ID","DATSCAN_DATE","DATSCAN_LIGAND","DATSCAN_QUALITY_RATING","DATSCAN_IMAGE_ACCEPTABLE")
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","DAT_Scan_Date_Metadata")
   PPMI <- PPMI %>% mutate(DAT_Scan_Date_Metadata_asDate = as.Date(paste("01/",DAT_Scan_Date_Metadata,sep=""),"%d/%m/%Y")) %>% relocate(DAT_Scan_Date_Metadata_asDate, .after = DAT_Scan_Date_Metadata) %>% arrange(Patient_Number,DAT_Scan_Date_Metadata_asDate)
@@ -246,7 +246,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   cat("\014")
   
   ######## DaTScan_Analysis.csv ########
-  DaT <- read.csv(paste0(raw_path,"DaTScan_Analysis_",download_date,".csv"), sep=",", header = T)
+  DaT <- read.csv(paste0(raw_path,"DaTScan_SBR_Analysis_",download_date,".csv"), sep=",", header = T)
   PPMI <- DaT %>% select("PATNO","EVENT_ID","DATSCAN_DATE","PROTOCOL","DATSCAN_LIGAND","DATSCAN_CAUDATE_R","DATSCAN_CAUDATE_L","DATSCAN_PUTAMEN_R","DATSCAN_PUTAMEN_L","DATSCAN_PUTAMEN_R_ANT","DATSCAN_PUTAMEN_L_ANT")
   colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","DAT_Scan_Date","DAT_Protocol")
   # adding average DaT result columns

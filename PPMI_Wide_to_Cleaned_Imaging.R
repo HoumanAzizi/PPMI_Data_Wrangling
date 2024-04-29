@@ -61,7 +61,8 @@ PPMI_Wide_to_Cleaned_Imaging <- function(folder_path) {
   colnames(img_BL) <- colnames(img_BLSC)
   for (i in 1:length(uniqueIDs)) {
     temp <- rbind(img_BLSC[(i*2)-1,],img_BLSC[i*2,])
-    img_BL[i,] <- setDT(temp)[, lapply(.SD,na.omit)][1]
+    img_BL[i,] <- setDT(temp)[, lapply(.SD, function(x) ifelse(is.na(x[1]), x[2], x))]
+    # img_BL[i,] <- setDT(temp)[, lapply(.SD,na.omit)][1] # old version - not working
   }
   # replacing BLs instead of BL/SCs
   PPMI <- PPMI %>% filter(!(paste0(Patient_Number,Visit_ID) %in% paste0(img_BLSC$Patient_Number,img_BLSC$Visit_ID)))

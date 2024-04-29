@@ -10,6 +10,9 @@ PPMI_EXTRA_Calculating_Missing_Value_Percentages <- function(folder_path) {
   PPMI <- PPMI %>% filter(Visit_ID %in% main_visits) %>% 
     filter(Cohort == 'PD')
   
+  # Optional: choose some specific variables
+  # PPMI <- PPMI %>% select(Patient_ID, Visit_ID,
+  #                         UPDRS_Part_II, Symbol_Digit, MOCA, Semantic_Fluency_Scaled, Schwab_England)
   
   
   ## Calculating missing data
@@ -39,6 +42,34 @@ PPMI_EXTRA_Calculating_Missing_Value_Percentages <- function(folder_path) {
   
   # limit to 2 decimals
   missing_calc[] <- lapply(missing_calc, function(x) if(is.numeric(x)) round(x, 2) else x)
+  
+  # Optional: Remove ones with BL or Overall more than 50%
+  toRemove <- (missing_calc[1,] > 50) & (missing_calc[20,] > 50)
+  columnsToRemove <- which(toRemove)[-1]
+  missing_calc <- missing_calc[, -columnsToRemove]
+  
+  missing_calc <- missing_calc %>% select(-starts_with('Blood_'), -starts_with('DAT'), -starts_with('DayDiff'), -Cognitive_Change)
+  
+  # Show as Image
+  library(ggplot2)
+  missing_calc_long <- pivot_longer(missing_calc, cols = -Visit_ID, names_to = "Variable", values_to = "Value")
+  # Optional
+  missing_calc_long <- missing_calc_long %>% filter(!(Visit_ID %in% c('V01', 'V03', 'V05', 'V07', 'V09', 'V11', 'V20')))
+  
+  p1 <- ggplot(missing_calc_long, aes(x = Visit_ID, y = Variable, fill = Value)) +
+    geom_tile(color = "white") +
+    scale_fill_gradient(low = "white", high = "red") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  ggsave("Missing_Data_all.pdf", p1, width = 10, height = 40)
+  
+  
+  p2 <- ggplot(missing_calc_long, aes(x = Visit_ID, y = Variable, fill = Value > 25)) +
+    geom_tile(color = "white") +
+    scale_fill_manual(values = c("grey", "red"), labels = c("<= 25", "> 25")) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  ggsave("Missing_Data_binary_25.pdf", p2, width = 10, height = 40)
   
   
   # Save

@@ -22,7 +22,8 @@ PPMI_Wide_to_Processed_Bio <- function(folder_path) {
   colnames(bio_BL) <- colnames(bio_BLSC)
   for (i in 1:length(uniqueIDs)) {
     temp <- rbind(bio_BLSC[(i*2)-1,],bio_BLSC[i*2,])
-    bio_BL[i,] <- setDT(temp)[, lapply(.SD,na.omit)][1]
+    bio_BL[i,] <- setDT(temp)[, lapply(.SD, function(x) ifelse(is.na(x[1]), x[2], x))]
+    # bio_BL[i,] <- setDT(temp)[, lapply(.SD,na.omit)][1] # older version - not working
   }
   # replacing BLs instead of BL/SCs
   bio <- bio %>% filter(!(paste0(Patient_ID,Visit_ID) %in% paste0(bio_BLSC$Patient_ID,bio_BLSC$Visit_ID)))
