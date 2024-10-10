@@ -267,6 +267,13 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
   
   
   
+  ######## Hoehn_Yahr_Stage_wide.csv ########
+  newFile <- read.csv("Hoehn_Yahr_Stage_wide.csv", sep=",", header = T)
+  PPMI <- PPMI %>% full_join(newFile, by = c("Patient_Number","Visit_ID","Visit_Date","Visit_Date_asDate")) %>% arrange(Patient_Number, Visit_Date_asDate)
+  PPMI <- removeDuplicates(PPMI,"HY")
+  
+  
+  
   
   
   
@@ -309,7 +316,8 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
                           Blood_Delay_Days = as.integer(difftime(Blood_Delay_Days, Visit_Date_asDate, units = "days")),
                           Skin_Delay_Days = as.integer(difftime(Skin_Delay_Days, Visit_Date_asDate, units = "days")),
                           FreezFall_Delay_Days = as.integer(difftime(FreezFall_Delay_Days, Visit_Date_asDate, units = "days")),
-                          CLC_Delay_Days = as.integer(difftime(CLC_Delay_Days, Visit_Date_asDate, units = "days")))
+                          CLC_Delay_Days = as.integer(difftime(CLC_Delay_Days, Visit_Date_asDate, units = "days")),
+                          HY_Delay_Days = as.integer(difftime(HY_Delay_Days, Visit_Date_asDate, units = "days")))
   
   
   

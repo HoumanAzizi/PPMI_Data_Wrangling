@@ -173,7 +173,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                           "BL_Date", "Days_from_BL", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "SEX", "EDUCYRS", "HANDED",
                           "UPDRS_PartI", "UPDRS_PartII", "UPDRS_PartIII", "UPDRS_PartIII_Calculated", "UPDRS_PartIII_Left", "UPDRS_PartIII_Left_Calculated", "UPDRS_PartIII_Right", "UPDRS_PartIII_Right_Calculated", "UPDRS3_Category", "UPDRS_Total_Score",
                           "MSEADLG", "Tremor_score", "PIGD_score", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", 
-                          "SCOPA_AUT_Score", "STAI_State_Score", "STAI_Trait_Score", "STAI_Total_Score", "UPSIT_Score",
+                          "SCOPA_AUT_Score", "STAI_State_Score", "STAI_Trait_Score", "STAI_Total_Score", "UPSIT_Score", 'HY_Stage',
                           "JLO_TOTRAW", "JLO_TOTCALC", "DVS_JLO_MSSA", "DVS_JLO_MSSAE", 
                           "DVT_TOTAL_RECALL", "DVT_DELAYED_RECALL", "DVT_RETENTION", "DVT_RECOG_DISC_INDEX",
                           "LNS_TOTRAW", "DVS_LNS", "DVS_SFTANIM", "DVT_SFTANIM",
@@ -189,7 +189,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                           "Cohort_n", "SEX_n",
                           "SC_Delay_Days", "Blood_Delay_Days", "Lumbar_Delay_Days", "Vital_Delay_Days", "UPDRS1_Delay_Days", "UPDRS2_Delay_Days", "UPDRS3_Delay_Days",
                           "MSE_Delay_Days", "ESS_Delay_Days", "GDS_Delay_Days", "MOCA_Delay_Days", "QUIP_Delay_Days", "REM_Delay_Days", "SCOPA_Delay_Days", "STAI_Delay_Days",
-                          "UPSIT_Delay_Days", "JLO_Delay_Days", "DVT_Delay_Days", "LNS_Delay_Days", "SFT_Delay_Days", "SDM_Delay_Days", "COG_Delay_Days")
+                          "UPSIT_Delay_Days", "JLO_Delay_Days", "DVT_Delay_Days", "LNS_Delay_Days", "SFT_Delay_Days", "SDM_Delay_Days", "COG_Delay_Days", 'HY_Delay_Days')
   
   
   # DayDiff_Visit_Baseline -> Day_Diff (Shows day difference of this visit from Baseline)
@@ -197,7 +197,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                  "Baseline_Date", "DayDiff", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "Sex" , "Education_Years", "Handedness",
                  "UPDRS_Part_I", "UPDRS_Part_II", "UPDRS_Part_III", "UPDRS_Part_III_Calculated", "UPDRS_Part_III_Left", "UPDRS_Part_III_Left_Calculated", "UPDRS_Part_III_Right", "UPDRS_Part_III_Right_Calculated", "UPDRS_PartIII_Category", "UPDRS_Total_Score",
                  "Schwab_England", "Tremor", "PIGD", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", 
-                 "SCOPA_AUT", "STAI_State", "STAI_Trait", "STAI_Total", "UPSIT_Score", 
+                 "SCOPA_AUT", "STAI_State", "STAI_Trait", "STAI_Total", "UPSIT_Score", 'HY_Stage',
                  "Benton_Line_Sum", "Benton_Line_Calculated_Sum", "Benton_MOANS_Age", "Benton_MOANS_Age_educ",
                  "HVLT_Total_Recall", "HVLT_Delayed_Recall", "HVLT_Retention", "HVLT_Recog_Discrim", 
                  "LNS", "LNS_Scaled", "Semantic_Fluency_Scaled", "Semantic_Fluency", 
@@ -213,7 +213,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                  "Cohort_Number", "Sex_Number",
                  "DayDiff_Screening_Baseline", "DayDiff_BloodCollection", "DayDiff_LumbarPunc", "DayDiff_Vitals", "DayDiff_UPDRS_I", "DayDiff_UPDRS_II", "DayDiff_UPDRS_III",
                  "DayDiff_SchwabEng", "DayDiff_Epworth", "DayDiff_GDS", "DayDiff_MOCA", "DayDiff_QUIP", "DayDiff_REM", "DayDiff_SCOPA", "DayDiff_STAI",
-                 "DayDiff_UPSIT", "DayDiff_BentonLine", "DayDiff_HVLT", "DayDiff_LNS", "DayDiff_SemanticFluency", "DayDiff_SymbolDigit", "DayDiff_Cognitive")
+                 "DayDiff_UPSIT", "DayDiff_BentonLine", "DayDiff_HVLT", "DayDiff_LNS", "DayDiff_SemanticFluency", "DayDiff_SymbolDigit", "DayDiff_Cognitive", 'DayDiff_HY_Stage')
   
   colnames(PPMI) <- new_names
   

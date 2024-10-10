@@ -732,7 +732,51 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   
   
-  
+  ######## Hoehn_Yahr_Stage.csv ########
+  # Load tables into data frames
+  MDS_UPDRS_Part_1 <- read_csv (paste0(raw_path,"MDS-UPDRS_Part_I_", download_date,".csv"))
+  MDS_UPDRS_Part_1P <- read_csv (paste0(raw_path,"MDS-UPDRS_Part_I_Patient_Questionnaire_", download_date,".csv"))
+  MDS_UPDRS_Part_2P <- read_csv (paste0(raw_path,"MDS_UPDRS_Part_II__Patient_Questionnaire_", download_date,".csv"))
+  MDS_UPDRS_Part_3 <- read_csv (paste0(raw_path,"MDS-UPDRS_Part_III_", download_date,".csv"))
+  # Fix date formats
+  MDS_UPDRS_Part_1 <- mutate(MDS_UPDRS_Part_1, INFODT = as.Date(paste("01/", as.character(INFODT)), "%d/%m/%Y"))
+  MDS_UPDRS_Part_1P <- mutate(MDS_UPDRS_Part_1P, INFODT = as.Date(paste("01/", as.character(INFODT)), "%d/%m/%Y"))
+  MDS_UPDRS_Part_2P <- mutate(MDS_UPDRS_Part_2P, INFODT = as.Date(paste("01/", as.character(INFODT)), "%d/%m/%Y"))
+  MDS_UPDRS_Part_3 <- mutate(MDS_UPDRS_Part_3, INFODT = as.Date(paste("01/", as.character(INFODT)), "%d/%m/%Y"))
+  # Join the data frames filtering on a single participant and take the maximum scores across each INFODT/EVENT_ID
+  # create a dataframe to keep all the results
+  all_participant_HY_results <- data.frame(matrix(ncol = 4, nrow = 0))
+  colnames(all_participant_HY_results) <- c("INFODT", "EVENT_ID", "HY_Stage", "Patient_ID")
+  # go through each participant and calculate
+  all_IDs <- unique(MDS_UPDRS_Part_3$PATNO)
+  for (current_patient_ID in all_IDs) {
+    current_participant_HY <- filter(MDS_UPDRS_Part_1, PATNO == current_patient_ID) %>%
+      inner_join (MDS_UPDRS_Part_1P, by = c("PATNO","INFODT","EVENT_ID")) %>%
+      inner_join (MDS_UPDRS_Part_2P, by = c("PATNO","INFODT","EVENT_ID")) %>%
+      inner_join (MDS_UPDRS_Part_3, by = c("PATNO","INFODT","EVENT_ID")) %>%
+      filter(!is.na(NP1RTOT), !is.na(NP1PTOT) & !is.na(NP2PTOT) & !is.na(NP3TOT) &
+               !is.na(NHY)) %>%
+      select (INFODT, EVENT_ID, NP1RTOT, NP1PTOT, NP2PTOT, NP3TOT, NHY) %>%
+      group_by (INFODT, EVENT_ID) %>%
+      summarize (Part1 = max(NP1RTOT), Part1P = max(NP1PTOT), Part2 = max(NP2PTOT), Part3
+                 = max(NP3TOT), HY_Stage = max(NHY)) %>%
+      arrange (INFODT, EVENT_ID)
+    
+    current_participant_HY <- current_participant_HY %>% select(INFODT, EVENT_ID, HY_Stage)
+    current_participant_HY$Patient_ID <- current_patient_ID
+    
+    all_participant_HY_results <- rbind(all_participant_HY_results, current_participant_HY)
+    
+    rm(current_participant_HY)
+  }
+  colnames(all_participant_HY_results) <- c("Visit_Date_asDate", "Visit_ID", "HY_Stage", "Patient_Number")
+  all_participant_HY_results <- all_participant_HY_results %>% select(Patient_Number, Visit_ID, Visit_Date_asDate, HY_Stage)
+  all_participant_HY_results <- as.data.frame(all_participant_HY_results)
+  all_participant_HY_results$Visit_Date <- format(all_participant_HY_results$Visit_Date_asDate, "%m/%Y") 
+  all_participant_HY_results <- all_participant_HY_results %>% select(Patient_Number, Visit_ID, Visit_Date, Visit_Date_asDate, HY_Stage) %>% arrange(Patient_Number,Visit_Date_asDate)
+  # Save
+  write.csv(all_participant_HY_results, '../Data_Wide/Hoehn_Yahr_Stage_wide.csv', row.names = FALSE)
+  rm(list = ls())
   
   
   
