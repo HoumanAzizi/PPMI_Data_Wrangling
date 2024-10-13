@@ -44,6 +44,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   UPDRS_PartIII_Left <- PPMI$NP3TOT_L
   UPDRS_PartIII_Right_Calculated <- PPMI$NP3TOT_Calculated_R
   UPDRS_PartIII_Right <- PPMI$NP3TOT_R
+  Apathy <- PPMI$Apathy
   
   
   RBD_Score <- rowSums((PPMI[,c("DRMVIVID","DRMAGRAC","DRMNOCTB","SLPLMBMV","SLPINJUR","DRMVERBL","DRMFIGHT","DRMUMV","DRMOBJFL","MVAWAKEN","DRMREMEM","SLPDSTRB")]))
@@ -122,6 +123,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI$UPDRS_PartIII_Left_Calculated <- UPDRS_PartIII_Left_Calculated
   PPMI$UPDRS_PartIII_Right_Calculated <- UPDRS_PartIII_Right_Calculated
   PPMI$RBD_Score <- RBD_Score
+  PPMI$Apathy_Score <- Apathy
   PPMI$UPSIT_Score <- UPSIT_Score
   PPMI$SCOPA_AUT_Score <- SCOPA_AUT_Score
   PPMI$STAI_State_Score <- STAI_State_Score
@@ -172,7 +174,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI <- PPMI %>% select("Patient_Number", "Visit_ID", "Visit_Date_asDate", "Age_at_Visit", "BL_Age", "BIRTHDT_asDate",
                           "BL_Date", "Days_from_BL", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "SEX", "EDUCYRS", "HANDED",
                           "UPDRS_PartI", "UPDRS_PartII", "UPDRS_PartIII", "UPDRS_PartIII_Calculated", "UPDRS_PartIII_Left", "UPDRS_PartIII_Left_Calculated", "UPDRS_PartIII_Right", "UPDRS_PartIII_Right_Calculated", "UPDRS3_Category", "UPDRS_Total_Score",
-                          "MSEADLG", "Tremor_score", "PIGD_score", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", 
+                          "MSEADLG", "Tremor_score", "PIGD_score", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", "Apathy_Score", 
                           "SCOPA_AUT_Score", "STAI_State_Score", "STAI_Trait_Score", "STAI_Total_Score", "UPSIT_Score", 'HY_Stage',
                           "JLO_TOTRAW", "JLO_TOTCALC", "DVS_JLO_MSSA", "DVS_JLO_MSSAE", 
                           "DVT_TOTAL_RECALL", "DVT_DELAYED_RECALL", "DVT_RETENTION", "DVT_RECOG_DISC_INDEX",
@@ -181,13 +183,13 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                           "Cognitive_Change",
                           "COGDECLN", "FNCDTCOG", "COGSTATE", "COGDXCL", "RVWNPSY",
                           "Albumin.QT", "Alkaline.Phosphatase.QT", "ALT..SGPT.", "AST..SGOT.", "Serum.Glucose", "Serum.Uric.Acid",
-                          "Total.Protein", "Urea.Nitrogen", "TOPRRSLT", "TGLCRSLT", 
+                          "Total.Protein", "Urea.Nitrogen", # "TOPRRSLT", "TGLCRSLT", -> 2 measures removed
                           "WGTKG", "HTCM", "TEMPC", "DIASUP", "HRSUP", "DIASTND", "HRSTND", "BP_Sys_drop", 
                           "SXDT", "Symptom_duration_years", "PD_diag_duration_years", "DXTREMOR", "DXRIGID", "DXBRADY", "DXPOSINS", "DXOTHSX",
                           "HISPLAT", "RAINDALS", "RAASIAN", "RABLACK", "RAHAWOPI", "RAWHITE", "BIOMOMPD", "BIODADPD",
                           "FULSIBPD", "HAFSIBPD", "MAGPARPD", "PAGPARPD", "MATAUPD", "PATAUPD",
                           "Cohort_n", "SEX_n",
-                          "SC_Delay_Days", "Blood_Delay_Days", "Lumbar_Delay_Days", "Vital_Delay_Days", "UPDRS1_Delay_Days", "UPDRS2_Delay_Days", "UPDRS3_Delay_Days",
+                          "SC_Delay_Days", "Blood_Delay_Days", "Vital_Delay_Days", "UPDRS1_Delay_Days", "UPDRS2_Delay_Days", "UPDRS3_Delay_Days", # removed "Lumbar_Delay_Days",
                           "MSE_Delay_Days", "ESS_Delay_Days", "GDS_Delay_Days", "MOCA_Delay_Days", "QUIP_Delay_Days", "REM_Delay_Days", "SCOPA_Delay_Days", "STAI_Delay_Days",
                           "UPSIT_Delay_Days", "JLO_Delay_Days", "DVT_Delay_Days", "LNS_Delay_Days", "SFT_Delay_Days", "SDM_Delay_Days", "COG_Delay_Days", 'HY_Delay_Days')
   
@@ -196,7 +198,7 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   new_names <- c("Patient_ID", "Visit_ID", "Visit_Date", "Age", "Age_Baseline", "Birthdate",
                  "Baseline_Date", "DayDiff", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "Sex" , "Education_Years", "Handedness",
                  "UPDRS_Part_I", "UPDRS_Part_II", "UPDRS_Part_III", "UPDRS_Part_III_Calculated", "UPDRS_Part_III_Left", "UPDRS_Part_III_Left_Calculated", "UPDRS_Part_III_Right", "UPDRS_Part_III_Right_Calculated", "UPDRS_PartIII_Category", "UPDRS_Total_Score",
-                 "Schwab_England", "Tremor", "PIGD", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", 
+                 "Schwab_England", "Tremor", "PIGD", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", "Apathy_Score",
                  "SCOPA_AUT", "STAI_State", "STAI_Trait", "STAI_Total", "UPSIT_Score", 'HY_Stage',
                  "Benton_Line_Sum", "Benton_Line_Calculated_Sum", "Benton_MOANS_Age", "Benton_MOANS_Age_educ",
                  "HVLT_Total_Recall", "HVLT_Delayed_Recall", "HVLT_Retention", "HVLT_Recog_Discrim", 
@@ -205,13 +207,13 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                  "Cognitive_Change",
                  "Cognitive_Decline_Experienced", "Cognitive_Functional_Decline", "Cognitive_State", "Cognitive_Diagnosis_Confidence.level", "Rev_Neuropsych_Test",
                  "Blood_Albumin", "Blood_ALK_P", "Blood_ALT", "Blood_AST", "Blood_Glucose", "Blood_Uric_Acid",
-                 "Blood_Total_Protein", "Blood_Urea_Nitrogen", "Blood_Total_Protein_CSF", "Blood_Total_Glocuse_CSF",
+                 "Blood_Total_Protein", "Blood_Urea_Nitrogen", # "Blood_Total_Protein_CSF", "Blood_Total_Glocuse_CSF", -> 2 measures removed
                  "Weight", "Height", "Temperature", "BP_Dias_Sup", "HR_Sup", "BP_Dias_Stand", "HR_Stand", "BP_Sys_drop",
                  "Symptom_Date", "Symptom_duration_years", "PD_diag_duration_years", "Diag_Rest_Tremor", "Diag_Rigidity", "Diag_Bradykinesia", "Diag_Postural_Instability", "Diag_Other_Symptoms",
                  "Race_Hispanic", "Race_Indian", "Race_Asian", "Race_Black", "Race_Hawaiian", "Race_White", "PDHistory_Mother", "PDHistory_Father",
                  "PDHistory_Full_Siblings", "PDHistory_Half_Sibling", "PDHistory_Maternal_GP", "PDHistory_Paternal_GP", "PDHistory_Maternal_AU", "PDHistory_Paternal_AU",
                  "Cohort_Number", "Sex_Number",
-                 "DayDiff_Screening_Baseline", "DayDiff_BloodCollection", "DayDiff_LumbarPunc", "DayDiff_Vitals", "DayDiff_UPDRS_I", "DayDiff_UPDRS_II", "DayDiff_UPDRS_III",
+                 "DayDiff_Screening_Baseline", "DayDiff_BloodCollection", "DayDiff_Vitals", "DayDiff_UPDRS_I", "DayDiff_UPDRS_II", "DayDiff_UPDRS_III", # removed "DayDiff_LumbarPunc",
                  "DayDiff_SchwabEng", "DayDiff_Epworth", "DayDiff_GDS", "DayDiff_MOCA", "DayDiff_QUIP", "DayDiff_REM", "DayDiff_SCOPA", "DayDiff_STAI",
                  "DayDiff_UPSIT", "DayDiff_BentonLine", "DayDiff_HVLT", "DayDiff_LNS", "DayDiff_SemanticFluency", "DayDiff_SymbolDigit", "DayDiff_Cognitive", 'DayDiff_HY_Stage')
   
@@ -276,10 +278,14 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
     }
     rm(current_patient_id, current_visit_date,patient_ledd_data)
   }
+  # add LDOPA duration
+  PPMI$LDOPA_Duration <- as.numeric(difftime(PPMI$Visit_Date, PPMI$LDOPA_Medication_Start_Date, units = 'days')/365)
+  # relocate columns
   PPMI <- PPMI %>% relocate(LDOPA_Equivalent_LEDD, .after = Rev_Neuropsych_Test)
   PPMI <- PPMI %>% relocate(LDOPA_Dose, .after = LDOPA_Equivalent_LEDD)
   PPMI <- PPMI %>% relocate(LDOPA_Medication_Start_Date, .after = LDOPA_Dose)
   PPMI <- PPMI %>% relocate(LDOPA_Medication_End_Date, .after = LDOPA_Medication_Start_Date)
+  PPMI <- PPMI %>% relocate(LDOPA_Duration, .after = LDOPA_Medication_End_Date)
   
   
   

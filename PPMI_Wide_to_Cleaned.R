@@ -162,10 +162,10 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
   
   
   
-  ######## Lumbar_Puncture_wide.csv ########
-  newFile <- read.csv("Lumbar_Puncture_wide.csv", sep=",", header = T)
-  PPMI <- PPMI %>% full_join(newFile, by = c("Patient_Number","Visit_ID","Visit_Date","Visit_Date_asDate")) %>% arrange(Patient_Number, Visit_Date_asDate)
-  PPMI <- removeDuplicates(PPMI,"Lumbar")
+  # ######## Lumbar_Puncture_wide.csv ########
+  # newFile <- read.csv("Lumbar_Puncture_wide.csv", sep=",", header = T)
+  # PPMI <- PPMI %>% full_join(newFile, by = c("Patient_Number","Visit_ID","Visit_Date","Visit_Date_asDate")) %>% arrange(Patient_Number, Visit_Date_asDate)
+  # PPMI <- removeDuplicates(PPMI,"Lumbar")
   
   
   
@@ -303,7 +303,7 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
                           GDS_Delay_Days = as.integer(difftime(GDS_Delay_Days, Visit_Date_asDate, units = "days")),
                           DVT_Delay_Days = as.integer(difftime(DVT_Delay_Days, Visit_Date_asDate, units = "days")),
                           LNS_Delay_Days = as.integer(difftime(LNS_Delay_Days, Visit_Date_asDate, units = "days")),
-                          Lumbar_Delay_Days = as.integer(difftime(Lumbar_Delay_Days, Visit_Date_asDate, units = "days")),
+                          # Lumbar_Delay_Days = as.integer(difftime(Lumbar_Delay_Days, Visit_Date_asDate, units = "days")),
                           MSE_Delay_Days = as.integer(difftime(MSE_Delay_Days, Visit_Date_asDate, units = "days")),
                           QUIP_Delay_Days = as.integer(difftime(QUIP_Delay_Days, Visit_Date_asDate, units = "days")),
                           REM_Delay_Days = as.integer(difftime(REM_Delay_Days, Visit_Date_asDate, units = "days")),

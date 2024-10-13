@@ -156,8 +156,9 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   UPDRS1[,16:23] <- sapply(UPDRS1[,16:23],as.numeric)
   UPDRS_PartI = rowSums(UPDRS1[,c("NP1COG","NP1HALL","NP1DPRS","NP1ANXS","NP1APAT","NP1DDS","NP1SLPN","NP1SLPD","NP1PAIN","NP1URIN","NP1CNST","NP1LTHD","NP1FATG")])
   UPDRS1$NP1TOT_Calculated <- UPDRS_PartI
+  UPDRS1$Apathy <- UPDRS1$NP1APAT
   
-  PPMI <- UPDRS1 %>% select("PATNO","EVENT_ID","INFODT","NP1RTOT","NP1TOT_Calculated")
+  PPMI <- UPDRS1 %>% select("PATNO","EVENT_ID","INFODT","NP1RTOT","NP1TOT_Calculated", 'Apathy')
   colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
   write.csv(PPMI, "../Data_Wide/MDS-UPDRS_Part_I_wide.csv", row.names=FALSE)
@@ -370,15 +371,15 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   cat("\014")
   
-  ######## Lumbar_Puncture.csv ########
-  lumb <- read.csv(paste0(raw_path,"Lumbar_Puncture_",download_date,".csv"), sep=",", header = T)
-  PPMI <- lumb %>% select("PATNO","EVENT_ID","INFODT","TOPRRSLT","TGLCRSLT")
-  colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
-  PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
-  PPMI[PPMI == ''] <- NA
-  write.csv(PPMI, "../Data_Wide/Lumbar_Puncture_wide.csv", row.names=FALSE)
-  
-  cat("\014")
+  # ######## Lumbar_Puncture.csv ######## - data are removed due to quality as of Oct 10 2024
+  # lumb <- read.csv(paste0(raw_path,"Lumbar_Puncture_",download_date,".csv"), sep=",", header = T)
+  # PPMI <- lumb %>% select("PATNO","EVENT_ID","INFODT","TOPRRSLT","TGLCRSLT")
+  # colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
+  # PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
+  # PPMI[PPMI == ''] <- NA
+  # write.csv(PPMI, "../Data_Wide/Lumbar_Puncture_wide.csv", row.names=FALSE)
+  # 
+  # cat("\014")
   
   ######## Modified_Schwab___England_Activities_of_Daily_Living.csv ########
   MSEA <- read.csv(paste0(raw_path,"Modified_Schwab___England_Activities_of_Daily_Living_",download_date,".csv"), sep=",", header = T)
@@ -557,16 +558,16 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   cat("\014")
   
-  ######## AV-133_PET_Analysis.csv ########
-  pet <- read.csv(paste0(raw_path,"AV-133_PET_Analysis_",download_date,".csv"), sep=",", header = T)
-  PPMI <- pet %>% select("PATNO","EVENT_ID","AV133_SCAN_DATE","AV133_RCAUD_S","AV133_RPUTANT_S",
-                         "AV133_RPUTPOST_S","AV133_LCAUD_S","AV133_LPUTANT_S","AV133_LPUTPOST_S")
-  colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","PET_Scan_Date")
-  PPMI <- PPMI %>% mutate(PET_Scan_Date_asDate = as.Date(paste("01/",PET_Scan_Date,sep=""),"%d/%m/%Y")) %>% relocate(PET_Scan_Date_asDate, .after = PET_Scan_Date) %>% arrange(Patient_Number,PET_Scan_Date_asDate)
-  PPMI[PPMI == ''] <- NA
-  write.csv(PPMI, "../Data_Wide/AV-133_PET_Analysis_wide.csv", row.names=FALSE)
-  
-  cat("\014")
+  # ######## AV-133_PET_Analysis.csv ######## -> files changed and not available anymore
+  # pet <- read.csv(paste0(raw_path,"AV-133_PET_Analysis_",download_date,".csv"), sep=",", header = T)
+  # PPMI <- pet %>% select("PATNO","EVENT_ID","AV133_SCAN_DATE","AV133_RCAUD_S","AV133_RPUTANT_S",
+  #                        "AV133_RPUTPOST_S","AV133_LCAUD_S","AV133_LPUTANT_S","AV133_LPUTPOST_S")
+  # colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","PET_Scan_Date")
+  # PPMI <- PPMI %>% mutate(PET_Scan_Date_asDate = as.Date(paste("01/",PET_Scan_Date,sep=""),"%d/%m/%Y")) %>% relocate(PET_Scan_Date_asDate, .after = PET_Scan_Date) %>% arrange(Patient_Number,PET_Scan_Date_asDate)
+  # PPMI[PPMI == ''] <- NA
+  # write.csv(PPMI, "../Data_Wide/AV-133_PET_Analysis_wide.csv", row.names=FALSE)
+  # 
+  # cat("\014")
   
   ######## Determination_of_Freezing_and_Falls.csv ########
   fall <- read.csv(paste0(raw_path,"Determination_of_Freezing_and_Falls_",download_date,".csv"), sep=",", header = T)
@@ -726,7 +727,6 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   # Save
   colnames(LEDD) <- c("Patient_Number","Medication_Start_Date","LDOPA","LEDD")
   write.csv(LEDD, "../Data_Wide/LEDD_Concomitant_Medication_Log_wide.csv", row.names=FALSE)
-  rm(list = ls())
   cat("\014")
   
   
@@ -777,7 +777,7 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   # Save
   write.csv(all_participant_HY_results, '../Data_Wide/Hoehn_Yahr_Stage_wide.csv', row.names = FALSE)
   rm(list = ls())
-  
+  cat("\014")
   
   
   return("COMPLETED STEP 1: Raw PPMI data turned to Wide Version")

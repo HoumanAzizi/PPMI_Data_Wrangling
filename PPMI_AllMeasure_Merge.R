@@ -34,15 +34,15 @@ PPMI_ALL_Merge_Final <- function(folder_path) {
   
   
   ######## Add bio, MRI, PET ########
-  PET <- imaging %>% select("Patient_ID", "Visit_ID", "DayDiff_PET", "AV133_RCAUD_S", "AV133_RPUTANT_S", 
-                            "AV133_RPUTPOST_S", "AV133_LCAUD_S", "AV133_LPUTANT_S", "AV133_LPUTPOST_S" ) %>% filter(!is.na(DayDiff_PET))
+  # PET <- imaging %>% select("Patient_ID", "Visit_ID", "DayDiff_PET", "AV133_RCAUD_S", "AV133_RPUTANT_S", 
+  #                           "AV133_RPUTPOST_S", "AV133_LCAUD_S", "AV133_LPUTANT_S", "AV133_LPUTPOST_S" ) %>% filter(!is.na(DayDiff_PET))
   MRI <- MRI %>% select('Patient_ID', 'Visit_ID_Match', 'MRI_Date', 'DayDiff_MRI')
   DAT <- imaging %>% select(Patient_ID, Visit_ID, DayDiff_DAT, starts_with('DAT')) %>% filter(!is.na(DayDiff_DAT))
   colnames(MRI) <- c('Patient_ID', 'Visit_ID', 'MRI_Scan_Date', 'DayDiff_MRI')
   
   
   PPMI <- PPMI %>% left_join(MRI, by = c("Patient_ID", "Visit_ID"))
-  PPMI <- PPMI %>% left_join(PET, by = c("Patient_ID", "Visit_ID"))
+  # PPMI <- PPMI %>% left_join(PET, by = c("Patient_ID", "Visit_ID"))
   PPMI <- PPMI %>% left_join(DAT, by = c("Patient_ID", "Visit_ID"))
   PPMI <- PPMI %>% left_join(bio, by = c("Patient_ID", "Visit_ID"))
   

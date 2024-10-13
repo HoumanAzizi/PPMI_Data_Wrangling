@@ -38,7 +38,7 @@ PPMI_Wide_to_Processed_Bio <- function(folder_path) {
                 "CSF_Albumin", "CSF_Alpha_synuclein", "CSF_lgG", "DJ_1", "EGF_ELISA", "Full_GBA_gene_sequencing", "GFAP",
                 "GRS", "HDL", "IL_6", "LDL", "LRRK2_rep_1_control", "LRRK2_rep_1_H2O2", "LRRK2_rep_1_H2O2_CCM",
                 "LRRK2_rep_1_H2O2_UCM", "LRRK2_rep_2_control", "LRRK2_rep_2_H2O2", "LRRK2_rep_2_H2O2_CCM", "LRRK2_rep_2_H2O2_UCM", "LRRK2_rep_3_control", "LRRK2_rep_3_H2O2",
-                "LRRK2_rep_3_H2O2_CCM", "LRRK2_rep_3_H2O2_UCM", "NEV_a_synuclein_rep1", "NEV_a_synuclein_rep2", "NfL_Serum", "NFL_CSF", "Plasma_Albumin",
+                "LRRK2_rep_3_H2O2_CCM", "LRRK2_rep_3_H2O2_UCM", "NfL_Serum", "NFL_CSF", "Plasma_Albumin", # removed "NEV_a_synuclein_rep1", "NEV_a_synuclein_rep2", on Oct 10, 2024
                 "Plasma_IgG", "pTau", "rs34637584_LRRK2_p_G2019S", "rs34995376_LRRK2_p_R1441H", "rs35801418_LRRK2_p_Y1699C", "rs35870237_LRRK2_p_I2020T", "rs76763715_GBA_p_N370S",
                 "S100", "SAA_Positive_final", "SCORE", "Serum_IGF_1", "SNCA_rep_1_control", "SNCA_rep_1_H2O2", "SNCA_rep_1_H2O2_CCM", "SNCA_rep_1_H2O2_UCM",
                 "SNCA_rep_2_control", "SNCA_rep_2_H2O2", "SNCA_rep_2_H2O2_CCM", "SNCA_rep_2_H2O2_UCM", "SNCA_rep_3_control", "SNCA_rep_3_H2O2", "SNCA_rep_3_H2O2_CCM",

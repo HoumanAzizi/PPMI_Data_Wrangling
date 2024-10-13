@@ -44,11 +44,11 @@ PPMI_EXTRA_Calculating_Missing_Value_Percentages <- function(folder_path) {
   missing_calc[] <- lapply(missing_calc, function(x) if(is.numeric(x)) round(x, 2) else x)
   
   # Optional: Remove ones with BL or Overall more than 50%
-  toRemove <- (missing_calc[1,] > 50) & (missing_calc[20,] > 50)
+  toRemove <- (missing_calc[1,] > 50) & (missing_calc[22,] > 50)
   columnsToRemove <- which(toRemove)[-1]
   missing_calc <- missing_calc[, -columnsToRemove]
   
-  missing_calc <- missing_calc %>% select(-starts_with('Blood_'), -starts_with('DAT'), -starts_with('DayDiff'), -Cognitive_Change)
+  missing_calc <- missing_calc %>% select(-starts_with('Blood_'), -starts_with('DAT'), -starts_with('DayDiff'), -any_of(c('Cognitive_Change')))
   
   # Show as Image
   library(ggplot2)

@@ -28,7 +28,7 @@ PPMI_Cleaned_to_Processed_Imaging <- function(folder_path) {
   
   ######## Matching U01, U02, U03, PW, and ST visits to regular visits ######## 
   ImagingIrregular <- Imaging %>% filter(!(Visit_ID == "BL" | substr(Visit_ID,1,1) == "V")) %>% 
-    select("Patient_ID", "Visit_ID", "Visit_Date", "MRI_Scan_Date_asDate", "DAT_Scan_Date_asDate", "PET_Scan_Date_asDate", "MRI_Delay_Days", "DAT_Delay_Days", "PET_Delay_Days")
+    select("Patient_ID", "Visit_ID", "Visit_Date", "MRI_Scan_Date_asDate", "DAT_Scan_Date_asDate", "MRI_Delay_Days", "DAT_Delay_Days") # removed PET_Scan_Date_asDate and PET_Delay_Days
   ImagingIrregular$Visit_ID_Match <- NA
   ImagingIrregular$Visit_Date_Match <- NA
   ImagingIrregular <- ImagingIrregular %>% relocate(Visit_ID_Match, .after = Visit_ID)
@@ -73,12 +73,10 @@ PPMI_Cleaned_to_Processed_Imaging <- function(folder_path) {
   ###### Fixing other columns ######
   # adding date difference of scans with Visit_Date
   Imaging <- Imaging %>% rowwise() %>%  mutate(DayDiff_MRI = as.integer(difftime(MRI_Scan_Date_asDate, Visit_Date, units = "days")),
-                                               DayDiff_DAT = as.integer(difftime(DAT_Scan_Date_asDate, Visit_Date, units = "days")),
-                                               DayDiff_PET = as.integer(difftime(PET_Scan_Date_asDate, Visit_Date, units = "days"))) %>%
+                                               DayDiff_DAT = as.integer(difftime(DAT_Scan_Date_asDate, Visit_Date, units = "days"))) %>% # removed DayDiff_PET = as.integer(difftime(PET_Scan_Date_asDate, Visit_Date, units = "days"))
     relocate(DayDiff_MRI, .after = MRI_Scan_Date_asDate) %>%
-    relocate(DayDiff_DAT, .after = DAT_Scan_Date_asDate) %>%
-    relocate(DayDiff_PET, .after = PET_Scan_Date_asDate) %>% 
-    select(-c("MRI_Delay_Days", "DAT_Delay_Days", "PET_Delay_Days"))
+    relocate(DayDiff_DAT, .after = DAT_Scan_Date_asDate) %>% # removed relocate(DayDiff_PET, .after = PET_Scan_Date_asDate)
+    select(-c("MRI_Delay_Days", "DAT_Delay_Days")) # removed PET_Delay_Days
   
   # merging rows which have same Patient_ID and Visit_ID
   idCheck <- Imaging %>% select(Patient_ID, Visit_ID)
@@ -185,10 +183,10 @@ PPMI_Cleaned_to_Processed_Imaging <- function(folder_path) {
   
   
   # renaming columns
-  Imaging <- Imaging %>% select(-c("MRI_Scan_Date", "DAT_Scan_Date", "PET_Scan_Date"))
+  Imaging <- Imaging %>% select(-c("MRI_Scan_Date", "DAT_Scan_Date")) # removed "PET_Scan_Date"
   colnames(Imaging)[which(colnames(Imaging)=="MRI_Scan_Date_asDate")] <- "MRI_Date"
   colnames(Imaging)[which(colnames(Imaging)=="DAT_Scan_Date_asDate")] <- "DAT_Date"
-  colnames(Imaging)[which(colnames(Imaging)=="PET_Scan_Date_asDate")] <- "PET_Date"
+  # colnames(Imaging)[which(colnames(Imaging)=="PET_Scan_Date_asDate")] <- "PET_Date"
   # Saving the full version
   write.csv(Imaging,paste0(folder_path,"PPMI_Imaging_All_cleaned_processed.csv"), row.names=FALSE)
   

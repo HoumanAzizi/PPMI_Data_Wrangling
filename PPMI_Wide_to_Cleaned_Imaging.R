@@ -35,9 +35,9 @@ PPMI_Wide_to_Cleaned_Imaging <- function(folder_path) {
   
   
   
-  ######## AV-133_PET_Analysis_wide.csv ########
-  newFile <- read.csv("AV-133_PET_Analysis_wide.csv", sep=",", header = T)
-  PPMI <- PPMI %>% full_join(newFile, by = c("Patient_Number","Visit_ID")) %>% arrange(Patient_Number, Visit_ID)
+  # ######## AV-133_PET_Analysis_wide.csv ########
+  # newFile <- read.csv("AV-133_PET_Analysis_wide.csv", sep=",", header = T)
+  # PPMI <- PPMI %>% full_join(newFile, by = c("Patient_Number","Visit_ID")) %>% arrange(Patient_Number, Visit_ID)
   
   
   
@@ -87,11 +87,9 @@ PPMI_Wide_to_Cleaned_Imaging <- function(folder_path) {
   
   
   PPMI <- PPMI %>% rowwise() %>%  mutate(MRI_Delay_Days = as.integer(difftime(MRI_Scan_Date_asDate, Behavioural_Visit_Date_asDate)),
-                                         DAT_Delay_Days = as.integer(difftime(DAT_Scan_Date_asDate, Behavioural_Visit_Date_asDate)),
-                                         PET_Delay_Days = as.integer(difftime(PET_Scan_Date_asDate, Behavioural_Visit_Date_asDate))) %>%
+                                         DAT_Delay_Days = as.integer(difftime(DAT_Scan_Date_asDate, Behavioural_Visit_Date_asDate))) %>% # removed PET_Delay_Days = as.integer(difftime(PET_Scan_Date_asDate, Behavioural_Visit_Date_asDate))
     relocate(MRI_Delay_Days, .after = MRI_Scan_Date_asDate) %>%
-    relocate(DAT_Delay_Days, .after = DAT_Scan_Date_asDate) %>%
-    relocate(PET_Delay_Days, .after = PET_Scan_Date_asDate)
+    relocate(DAT_Delay_Days, .after = DAT_Scan_Date_asDate) # %>% relocate(PET_Delay_Days, .after = PET_Scan_Date_asDate)
   
   
   
