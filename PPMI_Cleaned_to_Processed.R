@@ -316,7 +316,17 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI <- PPMI %>% relocate(LDOPA_Duration, .after = LDOPA_Medication_End_Date)
   
   
+  ## Add Age_Baseline, Baseline_Date, and DayDiff for subjects missing them
+  PPMI <- PPMI %>%
+    mutate(
+      Age_Baseline = ifelse(is.na(Age_Baseline) & Visit_ID == 'BL', Age, Age_Baseline),
+      Baseline_Date = ifelse(is.na(Baseline_Date) & Visit_ID == 'BL', Visit_Date, Baseline_Date),
+      DayDiff = ifelse(is.na(DayDiff) & Visit_ID == 'BL', 0, DayDiff)
+    )
   
+  
+  
+  ### FINAL OVERALL ADDITIONS
   # Add dates as only numbers as well (ex. 2012-08-23 to 20120823)
   PPMI <- PPMI %>% 
     mutate(Visit_Date_n = gsub("-", "", Visit_Date)) %>% relocate(Visit_Date_n, .after = Visit_Date) %>% 
