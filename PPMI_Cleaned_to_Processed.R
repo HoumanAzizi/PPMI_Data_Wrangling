@@ -280,6 +280,34 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   }
   # add LDOPA duration
   PPMI$LDOPA_Duration <- as.numeric(difftime(PPMI$Visit_Date, PPMI$LDOPA_Medication_Start_Date, units = 'days')/365)
+  # Add LDOPA start date and end date to all rows of a subject.
+  PPMI <- PPMI %>%
+    group_by(Patient_ID) %>%
+    mutate(LDOPA_Medication_Start_Date = 
+             if(any(!is.na(LDOPA_Medication_Start_Date))) {
+               first(na.omit(LDOPA_Medication_Start_Date))
+             } else { NA }) %>% 
+    mutate(LDOPA_Medication_End_Date = 
+             if(any(!is.na(LDOPA_Medication_End_Date))) {
+               first(na.omit(LDOPA_Medication_End_Date))
+             } else { NA }) %>% ungroup()
+  # Set LDOPA LEDD dose, LDOPA dose, and LDOPA duration to 0 if before the start date of LDOPA
+  PPMI <- PPMI %>% 
+    mutate(LDOPA_Equivalent_LEDD = case_when(is.na(LDOPA_Equivalent_LEDD) & 
+                                                              !is.na(Visit_ID) & 
+                                                              !is.na(LDOPA_Medication_Start_Date) & 
+                                                              Visit_Date < LDOPA_Medication_Start_Date ~ 0,
+                                                            TRUE ~ LDOPA_Equivalent_LEDD)) %>% 
+    mutate(LDOPA_Dose = case_when(is.na(LDOPA_Dose) & 
+                                    !is.na(Visit_ID) & 
+                                    !is.na(LDOPA_Medication_Start_Date) & 
+                                    Visit_Date < LDOPA_Medication_Start_Date ~ 0,
+                                  TRUE ~ LDOPA_Dose)) %>% 
+    mutate(LDOPA_Duration = case_when(is.na(LDOPA_Duration) & 
+                                    !is.na(Visit_ID) & 
+                                    !is.na(LDOPA_Medication_Start_Date) & 
+                                    Visit_Date < LDOPA_Medication_Start_Date ~ 0,
+                                  TRUE ~ LDOPA_Duration))
   # relocate columns
   PPMI <- PPMI %>% relocate(LDOPA_Equivalent_LEDD, .after = Rev_Neuropsych_Test)
   PPMI <- PPMI %>% relocate(LDOPA_Dose, .after = LDOPA_Equivalent_LEDD)
