@@ -308,6 +308,17 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
                                     !is.na(LDOPA_Medication_Start_Date) & 
                                     Visit_Date < LDOPA_Medication_Start_Date ~ 0,
                                   TRUE ~ LDOPA_Duration))
+  # Set LDOPA LEDD dose, LDOPA dose, and LDOPA duration to 0 for all HC subjects
+  PPMI <- PPMI %>% 
+    mutate(LDOPA_Equivalent_LEDD = case_when(Cohort == 'HC' & 
+                                                is.na(LDOPA_Equivalent_LEDD) ~ 0,
+                                              TRUE ~ LDOPA_Equivalent_LEDD)) %>% 
+    mutate(LDOPA_Dose = case_when(Cohort == 'HC' & 
+                                     is.na(LDOPA_Dose) ~ 0,
+                                   TRUE ~ LDOPA_Dose)) %>% 
+    mutate(LDOPA_Duration = case_when(Cohort == 'HC' & 
+                                         is.na(LDOPA_Duration) ~ 0,
+                                       TRUE ~ LDOPA_Duration))
   # relocate columns
   PPMI <- PPMI %>% relocate(LDOPA_Equivalent_LEDD, .after = Rev_Neuropsych_Test)
   PPMI <- PPMI %>% relocate(LDOPA_Dose, .after = LDOPA_Equivalent_LEDD)
@@ -324,6 +335,98 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
       DayDiff = ifelse(is.na(DayDiff) & Visit_ID == 'BL', 0, DayDiff)
     )
   
+  
+  ### Impute values that can change only in 1 direction
+  PPMI <- PPMI %>% arrange(Patient_ID, Visit_Date)
+  
+  ## Fixing HY_Stage
+  # Rule 1: Fill NA values before HY_Stage = 0
+  PPMI <- PPMI %>%
+    group_by(Patient_ID) %>%
+    mutate(
+      first_nonNA_row = which(!is.na(HY_Stage))[1], # Find the first non-NA HY_Stage value
+      is_first_zero = HY_Stage[first_nonNA_row] == 0, # Check if first non-NA value is 0
+      is_before_first = row_number() < first_nonNA_row, # Mark rows before first non-NA value
+      HY_Stage = ifelse(is_first_zero & is_before_first & is.na(HY_Stage), 0, HY_Stage)) %>% # Replace NA values before first 0 with 0
+    select(-first_nonNA_row, -is_first_zero, -is_before_first) %>% ungroup()
+  # Rule 2: Fill values between same HY_Stage values
+  PPMI <- PPMI %>%
+    group_by(Patient_ID) %>%
+    mutate(
+      row_num = row_number(),
+      # Find next non-NA stage
+      next_stage = sapply(row_num, function(x) {
+        future_vals = HY_Stage[row_num > x]
+        if(length(future_vals[!is.na(future_vals)]) > 0) {
+          return(future_vals[!is.na(future_vals)][1])
+        } else {
+          return(NA)
+        }
+      }),
+      # Find previous non-NA stage
+      previous_stage = sapply(row_num, function(x) {
+        past_vals = HY_Stage[row_num < x]
+        if(length(past_vals[!is.na(past_vals)]) > 0) {
+          return(past_vals[!is.na(past_vals)][length(past_vals[!is.na(past_vals)])])
+        } else {
+          return(NA)
+        }
+      }),
+      # Fill NA values where previous and next stages match
+      HY_Stage = ifelse(is.na(HY_Stage) & !is.na(previous_stage) & !is.na(next_stage) & previous_stage == next_stage,
+                        next_stage, HY_Stage)) %>%
+    select(-row_num, -next_stage, -previous_stage) %>% ungroup()
+  
+  
+  ## Fixing Cognitive_State
+  # Rule 1: Fill NA values before Cognitive_State = 1
+  PPMI <- PPMI %>%
+    group_by(Patient_ID) %>%
+    mutate(
+      first_nonNA_row = which(!is.na(Cognitive_State))[1], # Find the first non-NA Cognitive_State value
+      is_first_zero = Cognitive_State[first_nonNA_row] == 1, # Check if first non-NA value is 0
+      is_before_first = row_number() < first_nonNA_row, # Mark rows before first non-NA value
+      Cognitive_State = ifelse(is_first_zero & is_before_first & is.na(Cognitive_State), 1, Cognitive_State)) %>% # Replace NA values before first 1 with 1
+    select(-first_nonNA_row, -is_first_zero, -is_before_first) %>% ungroup()
+  # Rule 2: Fill values between same Cognitive_State values
+  PPMI <- PPMI %>%
+    group_by(Patient_ID) %>%
+    mutate(
+      row_num = row_number(),
+      # Find next non-NA stage
+      next_stage = sapply(row_num, function(x) {
+        future_vals = Cognitive_State[row_num > x]
+        if(length(future_vals[!is.na(future_vals)]) > 0) {
+          return(future_vals[!is.na(future_vals)][1])
+        } else {
+          return(NA)
+        }
+      }),
+      # Find previous non-NA stage
+      previous_stage = sapply(row_num, function(x) {
+        past_vals = Cognitive_State[row_num < x]
+        if(length(past_vals[!is.na(past_vals)]) > 0) {
+          return(past_vals[!is.na(past_vals)][length(past_vals[!is.na(past_vals)])])
+        } else {
+          return(NA)
+        }
+      }),
+      # Fill NA values where previous and next stages match
+      Cognitive_State = ifelse(is.na(Cognitive_State) & !is.na(previous_stage) & !is.na(next_stage) & previous_stage == next_stage,
+                        next_stage, Cognitive_State)) %>%
+    select(-row_num, -next_stage, -previous_stage) %>% ungroup()
+  
+  ## Set Height to the first available Height value among all visits
+  PPMI <- PPMI %>%
+    group_by(Patient_ID) %>%
+    mutate(
+      # Get the first non-NA Height value for each patient
+      first_height = if(all(is.na(Height))) { NA_real_ } else { first(na.omit(Height)) },
+      # Only update Height if first_height exists (not NA)
+      Height = ifelse(!is.na(first_height), first_height, Height)
+    ) %>%
+    select(-first_height) %>%
+    ungroup()
   
   
   ### FINAL OVERALL ADDITIONS
