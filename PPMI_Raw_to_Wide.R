@@ -26,18 +26,44 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   # Creating UPDRS values based on regular, ON, OFF, and A UPDRS3 versions
   # Creating values for Left and Right sides
   # For new PPMI raw data: Use PDSTATE and Fix duplicate rows
-  PPMI <- UPDRS3 %>% select("PATNO","EVENT_ID","INFODT","PAG_NAME","PDSTATE","NP3TOT",
+  PPMI <- UPDRS3 %>% select("PATNO","EVENT_ID","INFODT","PAG_NAME","PDSTATE",'PDMEDYN', 'PDTRTMNT', 'HRPOSTMED', 'PDMEDTM', 'EXAMTM', "NP3TOT",
                             "NP3FTAPL","NP3FTAPR","NP3HMOVL","NP3HMOVR",
                             "NP3KTRML","NP3KTRMR","NP3LGAGL","NP3LGAGR","NP3PRSPL","NP3PRSPR","NP3PTRML","NP3PTRMR",
                             "NP3TTAPL","NP3TTAPR","NP3RTALU","NP3RTARU","NP3RTALL","NP3RTARL","NP3RIGLU","NP3RIGRU","NP3RIGLL","NP3RIGRL",
                             "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated")
-  # Merging PAG_NAME and PDSTATE
-  PPMI <- PPMI %>% mutate(PAG_NAME = paste0(PAG_NAME,PDSTATE)) %>% select(-"PDSTATE")
-  # Removing Duplicates - method: arranging and taking first column
-  PPMI <- PPMI %>% mutate(unique_id = paste0(PATNO, EVENT_ID, PAG_NAME))
+  ## Correcting the UPDRS PAG_NAME and PD States
+  # NUPDRS3 is similar to NUPDRSDOSE3 -> ALL PAG_NAMEs will be NUPDRS3
+  # NUPDR3OF and NUPDR3ON are regular NUPDRS3 with PDSTATE OFF and ON, respectively
+  # Add HRPOSTMED when missing
+  PPMI[PPMI == ''] <- NA
+  PPMI[PPMI == 'NaN'] <- NA
+  ## Fix NUPDR3OF and NUPDR3ON values -> create a new PDSTATE_Corrected
+  PPMI <- PPMI %>% rowwise() %>% mutate(PDSTATE_Corrected = case_when(is.na(PDSTATE) && PAG_NAME=='NUPDR3OF' ~ 'OFF',
+                                                                      is.na(PDSTATE) && PAG_NAME=='NUPDR3ON' ~ 'ON',
+                                                                      TRUE ~ PDSTATE)) %>% relocate(PDSTATE_Corrected, .after = PDSTATE) %>% ungroup()
+  ## Fix PDMEDYN that are NA
+  # if that visit has PDSTATE_Corrected=='ON', it means they were medicated, so set to 1
+  PPMI <- PPMI %>% group_by(PATNO, EVENT_ID) %>% mutate(PDMEDYN_Corrected = case_when(any(is.na(PDMEDYN) & PDSTATE_Corrected == 'ON') ~ 1,
+                                                                                      TRUE ~ PDMEDYN)) %>% ungroup()
+  # if taking medication (PDMEDYN_Corrected) is NA AND PDSTATE_Corrected is also NA, then participant is not under medication
+  PPMI <- PPMI %>% rowwise() %>% mutate(PDMEDYN_Corrected = case_when(is.na(PDMEDYN_Corrected) && is.na(PDSTATE_Corrected) ~ 0,
+                                                                      TRUE ~ PDMEDYN_Corrected)) %>% relocate(PDMEDYN_Corrected, .after = PDMEDYN) %>% ungroup()
+  ## Fix PDSTATE_Corrected -> if no medication is taken (PDMEDYN_Corrected is 0), set PDSTATE_Corrected to No_Medication
+  PPMI <- PPMI %>% rowwise() %>% mutate(PDSTATE_Corrected = case_when(is.na(PDSTATE_Corrected) & PDMEDYN_Corrected == 0 ~ 'No_Medication',
+                                                                      TRUE ~ PDSTATE_Corrected)) %>% ungroup()
+  # after this, PDSTATE_Corrected of NA means probably invalid rows
+  PPMI <- PPMI %>% filter(!is.na(PDSTATE_Corrected))
+  
+  ## Removing duplicates
+  # Old version: Merging PAG_NAME and PDSTATE
+  # PPMI <- PPMI %>% mutate(PAG_NAME = paste0(PAG_NAME,PDSTATE))# %>% select(-"PDSTATE")
+  # Removing Duplicates - method: arranging and taking the column with available HRPOSTMED; then taking first column among identicals
+  # PPMI <- PPMI %>% mutate(unique_id = paste0(PATNO, EVENT_ID, PAG_NAME)) # Old version
+  PPMI <- PPMI %>% mutate(unique_id = paste0(PATNO, EVENT_ID, PDSTATE_Corrected))
   dups <- PPMI %>% group_by(unique_id) %>% mutate(count = n()) %>% 
     filter(count > 1) %>% select(-"count") %>% arrange(PATNO, PAG_NAME)
-  dups_fixed <- dups %>% mutate(remove = duplicated(unique_id)) %>% filter(remove == FALSE) %>% 
+  dups_fixed <- dups %>% mutate(remove = is.na(HRPOSTMED)) %>% filter(remove == FALSE) %>% 
+    mutate(remove = duplicated(unique_id)) %>% filter(remove == FALSE) %>% 
     select(-"remove")
   # Putting the fixed rows in PPMI
   PPMI <- PPMI %>% filter(!(unique_id %in% dups_fixed$unique_id))
@@ -83,65 +109,70 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   # Calculating L/R UPDRS3 values
   PPMI <- PPMI %>% rowwise() %>% 
     mutate(NP3TOT_L = sum(NP3FTAPL, NP3HMOVL, NP3KTRML, NP3LGAGL, NP3PRSPL, NP3PTRML,
-                          NP3RIGLU, NP3RIGLL, NP3TTAPL, NP3RTALU, NP3RTALL,  na.rm = FALSE),
+                          NP3RIGLU, NP3RIGLL, NP3TTAPL, NP3RTALU, NP3RTALL), #,na.rm = FALSE
            NP3TOT_R = sum(NP3FTAPR , NP3HMOVR , NP3KTRMR , NP3LGAGR , NP3PRSPR , NP3PTRMR, 
-                          NP3RIGRU, NP3RIGRL, NP3TTAPR, NP3RTARU, NP3RTARL, na.rm = FALSE))
-  PPMI <- PPMI %>% select("PATNO","EVENT_ID","INFODT",'PAG_NAME',
+                          NP3RIGRU, NP3RIGRL, NP3TTAPR, NP3RTARU, NP3RTARL)) #,na.rm = FALSE
+  PPMI <- PPMI %>% select("PATNO","EVENT_ID","INFODT", 'PDSTATE', 'PDSTATE_Corrected', 'PDMEDYN', 'PDMEDYN_Corrected', "PDTRTMNT", "HRPOSTMED", "PDMEDTM", "EXAMTM",
                           "NP3TOT",
                           "NP3TOT_L","NP3TOT_R",
                           "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated")
-  colnames(PPMI)[1:4] <- c("Patient_Number","Visit_ID","Visit_Date","UPDRS3_Category")
+  colnames(PPMI) <- c("Patient_Number","Visit_ID","Visit_Date", 'UPDRS3_State', 'UPDRS3_State_Corrected', 'isTaking_PD_Medication', 'isTaking_PD_Medication_Corrected', "isUnder_any_PD_Treatment", "UPDRS3_Time_Between_Examination_and_LastDose", "UPDRS3_Time_of_Medication_LastDose", "UPDRS3_Time_of_Examination",
+                      "NP3TOT",
+                      "NP3TOT_L","NP3TOT_R",
+                      "NP3TOT_Calculated","Tremor3_Calculated","PIGD3_Calculated")
   
+  
+  ### Note: will make it fully wide based on 'UPDRS3_State_Corrected' in the PPMI_Wide_to_Cleaned.R script
   
   #### CLEANING DUPLICATES ####
   # creating asDate column first
   PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
-  # getting only the problematic rows -> fixing them
-  PPMI_temp <- PPMI %>% group_by(Patient_Number, Visit_ID) %>% #UPDRS3_Category
-    filter(n() > 1) %>% arrange(Patient_Number, Visit_ID, Visit_Date_asDate) 
-  PPMI_cor <- data.frame(matrix(nrow = 0, ncol = length(PPMI_temp)))
-  colnames(PPMI_cor) <- colnames(PPMI_temp)
-  # Sort based on category first to get the main categories, if available
-  custom_order <- c("NUPDRS3", "NUPDRS3ON", "NUPDRS3OFF",
-                    "NUPDRDOSE3", "NUPDRDOSE3ON", "NUPDRDOSE3OFF",
-                    "NUPDRS3A", "NUPDRS3AON", "NUPDRS3AOFF",
-                    "NUPDR3ON", "NUPDR3ONON", "NUPDR3ONOFF",
-                    "NUPDR3OF", "NUPDR3OFON", "NUPDR3OFOFF")
-
-  PPMI_temp <- PPMI_temp %>% arrange(Patient_Number, Visit_ID, factor(UPDRS3_Category, levels = custom_order)) %>% 
-    mutate(UPDRS3_Category = as.character(UPDRS3_Category))
-  # remove any 3rd extra column
-  PPMI_temp <- PPMI_temp %>%
-    group_by(Patient_Number, Visit_ID) %>%
-    slice(1:2)
-  # if for a Patient_Number-Visit_ID combination there is a row with NP3TOT not being NA, keep that
-  PPMI_cor_nonNA <- PPMI_temp %>% group_by(Patient_Number, Visit_ID) %>% 
-    mutate(isNA = case_when(is.na(NP3TOT) ~ 1, TRUE ~ 0)) %>% 
-    mutate(isNA_all = sum(isNA))
-  PPMI_temp <- PPMI_cor_nonNA %>% filter(isNA_all != 1) %>% select(-isNA, -isNA_all) # this has the rows with duplicated - needs to be processed again below
-  PPMI_cor_nonNA <- PPMI_cor_nonNA %>% filter(isNA_all == 1) %>% filter(!is.na(NP3TOT)) %>% select(-isNA, -isNA_all) # this has the correct row if one of the duplicate's NP3TOT was NA
-  for (i in 1:(dim(PPMI_temp)[1]/2)) {
-    PPMI_cor[i,1:length(PPMI_temp)] <- PPMI_temp[(i*2)-1,]
-    PPMI_cor[i,6:length(PPMI_temp)] <- coalesce(as.numeric(PPMI_temp[(i*2)-1,6:length(PPMI_temp)]),as.numeric(PPMI_temp[i*2,6:length(PPMI_temp)])) #can use coalesce since all columns are numbers
-  }
-  PPMI_cor <- rbind(PPMI_cor,PPMI_cor_nonNA)
-  PPMI_cor <- PPMI_cor %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
-  # removing problematic rows from main file -> adding corrected rows -> rearrange
-  PPMI <- as.data.frame(PPMI)
-  PPMI <- PPMI %>% filter(!(paste0(Patient_Number,Visit_ID) %in% paste0(PPMI_cor$Patient_Number,PPMI_cor$Visit_ID)))
-  PPMI <- rbind(PPMI,PPMI_cor)
-  PPMI <- PPMI[!is.na(PPMI$Patient_Number),]
-  PPMI$Patient_Number <- as.numeric(PPMI$Patient_Number)
-  PPMI[is.na(PPMI)] <- NA
-  # Separate calculated and regular L and R NO3TOTs
-  PPMI$NP3TOT_Calculated_L <- PPMI$NP3TOT_L
-  PPMI$NP3TOT_Calculated_R <- PPMI$NP3TOT_R
-  PPMI$NP3TOT_L[is.na(PPMI$NP3TOT)] <- NA
-  PPMI$NP3TOT_R[is.na(PPMI$NP3TOT)] <- NA
+  
+  ## Old version below -> was removing duplicate rows based on old PAG_NAME
+  # # getting only the problematic rows -> fixing them
+  # PPMI_temp <- PPMI %>% group_by(Patient_Number, Visit_ID) %>% #UPDRS3_Category
+  #   filter(n() > 1) %>% arrange(Patient_Number, Visit_ID, Visit_Date_asDate) 
+  # PPMI_cor <- data.frame(matrix(nrow = 0, ncol = length(PPMI_temp)))
+  # colnames(PPMI_cor) <- colnames(PPMI_temp)
+  # # Sort based on category first to get the main categories, if available
+  # custom_order <- c("NUPDRS3", "NUPDRS3ON", "NUPDRS3OFF",
+  #                   "NUPDRDOSE3", "NUPDRDOSE3ON", "NUPDRDOSE3OFF",
+  #                   "NUPDRS3A", "NUPDRS3AON", "NUPDRS3AOFF",
+  #                   "NUPDR3ON", "NUPDR3ONON", "NUPDR3ONOFF",
+  #                   "NUPDR3OF", "NUPDR3OFON", "NUPDR3OFOFF")
+  # 
+  # PPMI_temp <- PPMI_temp %>% arrange(Patient_Number, Visit_ID, factor(UPDRS3_Category, levels = custom_order)) %>% 
+  #   mutate(UPDRS3_Category = as.character(UPDRS3_Category))
+  # # remove any 3rd extra column
+  # PPMI_temp <- PPMI_temp %>%
+  #   group_by(Patient_Number, Visit_ID) %>%
+  #   slice(1:2)
+  # # if for a Patient_Number-Visit_ID combination there is a row with NP3TOT not being NA, keep that
+  # PPMI_cor_nonNA <- PPMI_temp %>% group_by(Patient_Number, Visit_ID) %>% 
+  #   mutate(isNA = case_when(is.na(NP3TOT) ~ 1, TRUE ~ 0)) %>% 
+  #   mutate(isNA_all = sum(isNA))
+  # PPMI_temp <- PPMI_cor_nonNA %>% filter(isNA_all != 1) %>% select(-isNA, -isNA_all) # this has the rows with duplicated - needs to be processed again below
+  # PPMI_cor_nonNA <- PPMI_cor_nonNA %>% filter(isNA_all == 1) %>% filter(!is.na(NP3TOT)) %>% select(-isNA, -isNA_all) # this has the correct row if one of the duplicate's NP3TOT was NA
+  # for (i in 1:(dim(PPMI_temp)[1]/2)) {
+  #   PPMI_cor[i,1:length(PPMI_temp)] <- PPMI_temp[(i*2)-1,]
+  #   PPMI_cor[i,6:length(PPMI_temp)] <- coalesce(as.numeric(PPMI_temp[(i*2)-1,6:length(PPMI_temp)]),as.numeric(PPMI_temp[i*2,6:length(PPMI_temp)])) #can use coalesce since all columns are numbers
+  # }
+  # PPMI_cor <- rbind(PPMI_cor,PPMI_cor_nonNA)
+  # PPMI_cor <- PPMI_cor %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
+  # # removing problematic rows from main file -> adding corrected rows -> rearrange
+  # PPMI <- as.data.frame(PPMI)
+  # PPMI <- PPMI %>% filter(!(paste0(Patient_Number,Visit_ID) %in% paste0(PPMI_cor$Patient_Number,PPMI_cor$Visit_ID)))
+  # PPMI <- rbind(PPMI,PPMI_cor)
+  # PPMI <- PPMI[!is.na(PPMI$Patient_Number),]
+  # PPMI$Patient_Number <- as.numeric(PPMI$Patient_Number)
+  # PPMI[is.na(PPMI)] <- NA
+  # ## Separate calculated and regular L and R NO3TOTs
+  # PPMI$NP3TOT_Calculated_L <- PPMI$NP3TOT_L
+  # PPMI$NP3TOT_Calculated_R <- PPMI$NP3TOT_R
+  # PPMI$NP3TOT_L[is.na(PPMI$NP3TOT)] <- NA
+  # PPMI$NP3TOT_R[is.na(PPMI$NP3TOT)] <- NA
   
   # saving wide file
-  # write.csv(PPMI, "../Data_Wide/MDS_UPDRS_Part_III_wide.csv", row.names=FALSE)
-  # PPMI <- read.csv("../Data_Wide/MDS_UPDRS_Part_III_wide.csv", sep=",", header = T)
   PPMI <- PPMI %>% arrange(Patient_Number,Visit_Date_asDate)
   write.csv(PPMI, "../Data_Wide/MDS_UPDRS_Part_III_wide.csv", row.names=FALSE)
   

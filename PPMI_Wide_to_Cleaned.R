@@ -59,8 +59,44 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
   
   ######## MDS_UPDRS_Part_III.csv as Initial File ########
   PPMI <- read.csv("MDS_UPDRS_Part_III_wide.csv", sep=",", header = T)
-  PPMI$UPDRS3_Delay_Days <- PPMI$Visit_Date_asDate
+  PPMI <- PPMI %>% select(-UPDRS3_State, -isTaking_PD_Medication)
+  ## get the values that should remain same across rows and remove duplicates
+  tmp <- PPMI %>% select(Patient_Number, Visit_ID, Visit_Date, Visit_Date_asDate, isTaking_PD_Medication_Corrected, isUnder_any_PD_Treatment)
+  # Sort tmp by date, then remove the first row (earlier date) -> reason: if inconsistencies exist, the problem comes from wrong early date
+  tmp_1visit <- tmp %>% group_by(Patient_Number, Visit_ID) %>% filter(n() == 1) %>% ungroup()
+  tmp_2visit <- tmp %>% group_by(Patient_Number, Visit_ID) %>% filter(n() > 1) %>% ungroup()
+  tmp_2visit <- tmp_2visit %>% group_by(Patient_Number, Visit_ID) %>% arrange(Visit_Date_asDate, .by_group = TRUE) %>% slice(-1)
+  tmp <- rbind(tmp_1visit, tmp_2visit) %>% arrange(Patient_Number, Visit_ID)
+  table(duplicated(paste0(tmp$Patient_Number, tmp$Visit_ID))) # this should give all FALSE
+  # Extra: can double check if any problematic rows exist
+  # problematic_rows <- tmp %>%
+  #   group_by(Patient_Number, Visit_ID) %>% filter(n() > 1) %>%
+  #   group_by(Patient_Number, Visit_ID) %>%
+  #   filter( n_distinct(Visit_Date) > 1 | 
+  #             n_distinct(Visit_Date_asDate) > 1 |
+  #             n_distinct(isTaking_PD_Medication_Corrected) > 1 |
+  #             n_distinct(isUnder_any_PD_Treatment) > 1)
   
+  ### Make it fully wide based on UPDRS3_State_Corrected
+  PPMI <- PPMI %>% select(-Visit_Date, -Visit_Date_asDate, -isTaking_PD_Medication_Corrected, -isUnder_any_PD_Treatment)
+  PPMI <- PPMI %>% pivot_wider(
+    names_from = UPDRS3_State_Corrected,
+    values_from = c("UPDRS3_Time_Between_Examination_and_LastDose",
+                    "UPDRS3_Time_of_Medication_LastDose",
+                    "UPDRS3_Time_of_Examination",
+                    "NP3TOT",
+                    "NP3TOT_L",
+                    "NP3TOT_R",
+                    "NP3TOT_Calculated",
+                    "Tremor3_Calculated",
+                    "PIGD3_Calculated"))
+  PPMI <- PPMI %>% left_join(tmp, by = c('Patient_Number', 'Visit_ID'))
+  PPMI <- PPMI %>% select("Patient_Number", "Visit_ID", "Visit_Date", "Visit_Date_asDate", 
+                          'NP3TOT_ON', 'NP3TOT_OFF', 'NP3TOT_No_Medication', 
+                          'isTaking_PD_Medication_Corrected', 'isUnder_any_PD_Treatment',
+                          colnames(PPMI))
+  PPMI$UPDRS3_Delay_Days <- PPMI$Visit_Date_asDate
+  rm(tmp, tmp_1visit, tmp_2visit)
   
   
   
