@@ -763,6 +763,63 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   
   
+  ######## LEDD_Concomitant_Medication_Log.csv Part 2 ########
+  ## Getting a list of medications being taken at each visit - then making it wide
+  ## Note: needs a drug list file where column names are drug categories and values are drugs in PPMI list belonging to that category
+  drug_list <- read.csv('../PPMI_LEDD_Drug_Categories.csv')
+  LEDD_Concomitant_Medication_Log <- read.csv(paste0(raw_path,"LEDD_Concomitant_Medication_Log_",download_date,".csv"), sep=",", header = T)
+  
+  # Fix LEDD dataframe
+  LEDD_Concomitant_Medication_Log <- LEDD_Concomitant_Medication_Log %>% select(PATNO, LEDTRT, STARTDT, STOPDT)
+  colnames(LEDD_Concomitant_Medication_Log) <- c('Patient_ID', 'Med', 'Start_date', 'Stop_date')
+  LEDD_Concomitant_Medication_Log$Stop_date[LEDD_Concomitant_Medication_Log$Stop_date == ''] <- '01/9999' # set this date for ongoing drugs
+  LEDD_Concomitant_Medication_Log$Start_date <- as.Date(paste0("01/", LEDD_Concomitant_Medication_Log$Start_date), format = "%d/%m/%Y")
+  LEDD_Concomitant_Medication_Log$Stop_date <- as.Date(paste0("01/", LEDD_Concomitant_Medication_Log$Stop_date), format = "%d/%m/%Y")
+  
+  
+  ## Add drug category
+  # Get a list of drug categories
+  categories <- colnames(drug_list)
+  
+  # For each category, add all drug names to the dictionary
+  drug_to_category <- list()
+  for (category in categories) {
+    # Get all non-empty drug names in this category
+    drugs <- drug_list[[category]][drug_list[[category]] != ""]
+    drugs_lower <- tolower(drugs)
+    # Add each drug to the dictionary with its category
+    for (i in 1:length(drugs)) {
+      drug_to_category[[drugs_lower[i]]] <- category
+    }
+  }
+  
+  # Add the Med_category column to the LEDD dataframe
+  LEDD_Concomitant_Medication_Log$Med_category <- sapply(tolower(LEDD_Concomitant_Medication_Log$Med), function(med) {
+    # Try to find an exact match
+    if (!is.null(drug_to_category[[med]])) {
+      return(drug_to_category[[med]])
+    }
+    # If no exact match, try partial matching
+    for (drug in names(drug_to_category)) {
+      if (grepl(drug, med, fixed = TRUE) || grepl(med, drug, fixed = TRUE)) {
+        return(drug_to_category[[drug]])
+      }
+    }
+    # If no match found, return "Other"
+    return("Other")
+  })
+  
+  # Replace dot with underscore in categories
+  LEDD_Concomitant_Medication_Log$Med_category <- gsub("\\.", "_", LEDD_Concomitant_Medication_Log$Med_category)
+  
+  # Save
+  write.csv(LEDD_Concomitant_Medication_Log, "../Data_Wide/LEDD_Medication_List_wide.csv", row.names=FALSE)
+  cat("\014")
+  
+  
+  
+  
+  
   ######## Hoehn_Yahr_Stage.csv ########
   # Load tables into data frames
   MDS_UPDRS_Part_1 <- read_csv (paste0(raw_path,"MDS-UPDRS_Part_I_", download_date,".csv"))

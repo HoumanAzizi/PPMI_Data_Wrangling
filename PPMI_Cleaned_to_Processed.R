@@ -327,7 +327,53 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI <- PPMI %>% relocate(LDOPA_Duration, .after = LDOPA_Medication_End_Date)
   
   
-  ## Add Age_Baseline, Baseline_Date, and DayDiff for subjects missing them
+  
+  
+  ### Add LEDD medication list for each subject visit
+  rm(LEDD)
+  LEDD <- read.csv("Data_Wide/LEDD_Medication_List_wide.csv", sep=",", header = T)
+  
+  # Create LEDD_Matched from PPMI dataframe
+  LEDD_Matched <- PPMI[, c("Patient_ID", "Visit_ID", "Visit_Date")]
+  # fix dates
+  LEDD_Matched$Visit_Date <- as.Date(LEDD_Matched$Visit_Date)
+  LEDD$Start_date <- as.Date(LEDD$Start_date)
+  LEDD$Stop_date <- as.Date(LEDD$Stop_date)
+  
+  # Create new columns in LEDD_Matched for each medication category, initialized with NA
+  unique_med_categories <- unique(LEDD$Med_category)
+  for (med_category in unique_med_categories) {
+    column_name <- paste0("Medication_", med_category)
+    LEDD_Matched[[column_name]] <- 0
+  }
+  
+  ## Process each row in the LEDD dataframe
+  for (i in 1:nrow(LEDD)) {
+    current_patient <- LEDD$Patient_ID[i]
+    current_med_category <- LEDD$Med_category[i]
+    current_start_date <- LEDD$Start_date[i]
+    current_stop_date <- LEDD$Stop_date[i]
+    
+    # Find matching rows in LEDD_Matched
+    matched_rows <- which(LEDD_Matched$Patient_ID == current_patient & 
+                            LEDD_Matched$Visit_Date >= current_start_date &
+                            LEDD_Matched$Visit_Date <= current_stop_date)
+    
+    # If matches found, set the corresponding medication column to 1
+    if (length(matched_rows) > 0) {
+      column_name <- paste0("Medication_", current_med_category)
+      LEDD_Matched[matched_rows, column_name] <- 1
+    }
+  }
+  
+  ## Add to the PPMI dataset
+  LEDD_Matched <- LEDD_Matched %>% select(-Visit_Date)
+  PPMI <- PPMI %>% left_join(LEDD_Matched, by = c("Patient_ID", "Visit_ID"))
+  
+  
+  
+  
+  ### Add Age_Baseline, Baseline_Date, and DayDiff for subjects missing them
   PPMI <- PPMI %>%
     mutate(
       Age_Baseline = ifelse(is.na(Age_Baseline) & Visit_ID == 'BL', Age, Age_Baseline),
