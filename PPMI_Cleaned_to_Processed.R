@@ -26,24 +26,42 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   
   BP_Sys_drop <- PPMI$SYSSUP - PPMI$SYSSTND
   
-  Tremor_score <- rowMeans(PPMI[,c("Tremor2_Calculated","Tremor3_Calculated")],na.rm = TRUE)
-  PIGD_score <- rowMeans(PPMI[,c("PIGD2_Calculated","PIGD3_Calculated")])
+  Tremor_score_ON <- rowMeans(PPMI[,c("Tremor2_Calculated","Tremor3_Calculated_ON")]) # not doing 'na.rm = TRUE' anymore so only proper values are calculated
+  Tremor_score_OFF <- rowMeans(PPMI[,c("Tremor2_Calculated","Tremor3_Calculated_OFF")])
+  Tremor_score_No_Medication <- rowMeans(PPMI[,c("Tremor2_Calculated","Tremor3_Calculated_No_Medication")])
   
-  PPMI <- PPMI %>% select(-c("Tremor2_Calculated","Tremor3_Calculated",
-                             "PIGD2_Calculated","PIGD3_Calculated"))
+  PIGD_score_ON <- rowMeans(PPMI[,c("PIGD2_Calculated","PIGD3_Calculated_ON")])
+  PIGD_score_OFF <- rowMeans(PPMI[,c("PIGD2_Calculated","PIGD3_Calculated_OFF")])
+  PIGD_score_No_Medication <- rowMeans(PPMI[,c("PIGD2_Calculated","PIGD3_Calculated_No_Medication")])
+  
+  PPMI <- PPMI %>% select(-c("Tremor2_Calculated","PIGD2_Calculated"), -starts_with('Tremor3_Calculated_'), -starts_with('PIGD3_Calculated_'))
   
   
   
   #CALCULATE NUPDRS TOTAL HERE
   UPDRS_PartI <- PPMI$NP1TOT_Calculated
   UPDRS_PartII <- PPMI$NP2TOT_Calculated
-  UPDRS_PartIII <- PPMI$NP3TOT
-  UPDRS_PartIII_Calculated <- PPMI$NP3TOT_Calculated
-  UPDRS_Total_Score <- rowSums(cbind(UPDRS_PartI, UPDRS_PartII, UPDRS_PartIII))
-  UPDRS_PartIII_Left_Calculated <- PPMI$NP3TOT_Calculated_L
-  UPDRS_PartIII_Left <- PPMI$NP3TOT_L
-  UPDRS_PartIII_Right_Calculated <- PPMI$NP3TOT_Calculated_R
-  UPDRS_PartIII_Right <- PPMI$NP3TOT_R
+  
+  UPDRS_PartIII_ON <- PPMI$NP3TOT_ON
+  UPDRS_PartIII_OFF <- PPMI$NP3TOT_OFF
+  UPDRS_PartIII_No_Medication <- PPMI$NP3TOT_No_Medication
+  
+  UPDRS_PartIII_Calculated_ON <- PPMI$NP3TOT_Calculated_ON
+  UPDRS_PartIII_Calculated_OFF <- PPMI$NP3TOT_Calculated_OFF
+  UPDRS_PartIII_Calculated_No_Medication <- PPMI$NP3TOT_Calculated_No_Medication
+  
+  UPDRS_Total_Score_ON <- rowSums(cbind(UPDRS_PartI, UPDRS_PartII, UPDRS_PartIII_ON))
+  UPDRS_Total_Score_OFF <- rowSums(cbind(UPDRS_PartI, UPDRS_PartII, UPDRS_PartIII_OFF))
+  UPDRS_Total_Score_No_Medication <- rowSums(cbind(UPDRS_PartI, UPDRS_PartII, UPDRS_PartIII_No_Medication))
+  
+  UPDRS_PartIII_Left_ON <- PPMI$NP3TOT_L_ON
+  UPDRS_PartIII_Left_OFF <- PPMI$NP3TOT_L_OFF
+  UPDRS_PartIII_Left_No_Medication <- PPMI$NP3TOT_L_No_Medication
+  
+  UPDRS_PartIII_Right_ON <- PPMI$NP3TOT_R_ON
+  UPDRS_PartIII_Right_OFF <- PPMI$NP3TOT_R_OFF
+  UPDRS_PartIII_Right_No_Medication <- PPMI$NP3TOT_R_No_Medication
+  
   Apathy <- PPMI$Apathy
   
   
@@ -111,17 +129,26 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   PPMI$BP_Sys_drop <- BP_Sys_drop
   PPMI$Symptom_duration_years <- Symptom_duration
   PPMI$PD_diag_duration_years <- PD_diag_duration_Years
-  PPMI$Tremor_score <- Tremor_score
-  PPMI$PIGD_score <- PIGD_score
+  PPMI$Tremor_score_ON <- Tremor_score_ON
+  PPMI$Tremor_score_OFF <- Tremor_score_OFF
+  PPMI$Tremor_score_No_Medication <- Tremor_score_No_Medication
+  PPMI$PIGD_score_ON <- PIGD_score_ON
+  PPMI$PIGD_score_OFF <- PIGD_score_OFF
+  PPMI$PIGD_score_No_Medication <- PIGD_score_No_Medication
   PPMI$UPDRS_PartI <- UPDRS_PartI
   PPMI$UPDRS_PartII <- UPDRS_PartII
-  PPMI$UPDRS_PartIII <- UPDRS_PartIII
-  PPMI$UPDRS_Total_Score <- UPDRS_Total_Score
-  PPMI$UPDRS_PartIII_Left <- UPDRS_PartIII_Left
-  PPMI$UPDRS_PartIII_Right <- UPDRS_PartIII_Right
-  PPMI$UPDRS_PartIII_Calculated <- UPDRS_PartIII_Calculated
-  PPMI$UPDRS_PartIII_Left_Calculated <- UPDRS_PartIII_Left_Calculated
-  PPMI$UPDRS_PartIII_Right_Calculated <- UPDRS_PartIII_Right_Calculated
+  PPMI$UPDRS_PartIII_ON <- UPDRS_PartIII_ON
+  PPMI$UPDRS_PartIII_OFF <- UPDRS_PartIII_OFF
+  PPMI$UPDRS_PartIII_No_Medication <- UPDRS_PartIII_No_Medication
+  PPMI$UPDRS_Total_Score_ON <- UPDRS_Total_Score_ON
+  PPMI$UPDRS_Total_Score_OFF <- UPDRS_Total_Score_OFF
+  PPMI$UPDRS_Total_Score_No_Medication <- UPDRS_Total_Score_No_Medication
+  PPMI$UPDRS_PartIII_Left_ON <- UPDRS_PartIII_Left_ON
+  PPMI$UPDRS_PartIII_Left_OFF <- UPDRS_PartIII_Left_OFF
+  PPMI$UPDRS_PartIII_Left_No_Medication <- UPDRS_PartIII_Left_No_Medication
+  PPMI$UPDRS_PartIII_Right_ON <- UPDRS_PartIII_Right_ON
+  PPMI$UPDRS_PartIII_Right_OFF <- UPDRS_PartIII_Right_OFF
+  PPMI$UPDRS_PartIII_Right_No_Medication <- UPDRS_PartIII_Right_No_Medication
   PPMI$RBD_Score <- RBD_Score
   PPMI$Apathy_Score <- Apathy
   PPMI$UPSIT_Score <- UPSIT_Score
@@ -173,8 +200,14 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   # These ones are available separately in the bio file: "Abeta.42","CSF.Alpha.synuclein","p.Tau181P","Total.tau","rs34637584_LRRK2_p.G2019S","rs76763715_GBA_p.N370S"
   PPMI <- PPMI %>% select("Patient_Number", "Visit_ID", "Visit_Date_asDate", "Age_at_Visit", "BL_Age", "BIRTHDT_asDate",
                           "BL_Date", "Days_from_BL", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "SEX", "EDUCYRS", "HANDED",
-                          "UPDRS_PartI", "UPDRS_PartII", "UPDRS_PartIII", "UPDRS_PartIII_Calculated", "UPDRS_PartIII_Left", "UPDRS_PartIII_Left_Calculated", "UPDRS_PartIII_Right", "UPDRS_PartIII_Right_Calculated", "UPDRS3_Category", "UPDRS_Total_Score",
-                          "MSEADLG", "Tremor_score", "PIGD_score", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", "Apathy_Score", 
+                          "UPDRS_PartI", "UPDRS_PartII", 
+                          "UPDRS_PartIII_ON", "UPDRS_PartIII_OFF", "UPDRS_PartIII_No_Medication",
+                          "UPDRS_PartIII_Left_ON", "UPDRS_PartIII_Left_OFF", "UPDRS_PartIII_Left_No_Medication",
+                          "UPDRS_PartIII_Right_ON", "UPDRS_PartIII_Right_OFF", "UPDRS_PartIII_Right_No_Medication",
+                          "UPDRS_Total_Score_ON", "UPDRS_Total_Score_OFF", "UPDRS_Total_Score_No_Medication",
+                          "Tremor_score_ON", "Tremor_score_OFF", "Tremor_score_No_Medication",
+                          "PIGD_score_ON", "PIGD_score_OFF", "PIGD_score_No_Medication",
+                          "MSEADLG", "ESS_total", "GDS_Score", "MCATOT", "MOCA_adjusted_Score", "QUIP_Total", "RBD_Score", "Apathy_Score", 
                           "SCOPA_AUT_Score", "STAI_State_Score", "STAI_Trait_Score", "STAI_Total_Score", "UPSIT_Score", 'HY_Stage',
                           "JLO_TOTRAW", "JLO_TOTCALC", "DVS_JLO_MSSA", "DVS_JLO_MSSAE", 
                           "DVT_TOTAL_RECALL", "DVT_DELAYED_RECALL", "DVT_RETENTION", "DVT_RECOG_DISC_INDEX",
@@ -197,8 +230,14 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   # DayDiff_Visit_Baseline -> Day_Diff (Shows day difference of this visit from Baseline)
   new_names <- c("Patient_ID", "Visit_ID", "Visit_Date", "Age", "Age_Baseline", "Birthdate",
                  "Baseline_Date", "DayDiff", "Cohort", "Sub_Cohort_Regular", "Sub_Cohort_Detailed", "Sex" , "Education_Years", "Handedness",
-                 "UPDRS_Part_I", "UPDRS_Part_II", "UPDRS_Part_III", "UPDRS_Part_III_Calculated", "UPDRS_Part_III_Left", "UPDRS_Part_III_Left_Calculated", "UPDRS_Part_III_Right", "UPDRS_Part_III_Right_Calculated", "UPDRS_PartIII_Category", "UPDRS_Total_Score",
-                 "Schwab_England", "Tremor", "PIGD", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", "Apathy_Score",
+                 "UPDRS_Part_I", "UPDRS_Part_II", 
+                 "UPDRS_Part_III_ON", "UPDRS_Part_III_OFF", "UPDRS_Part_III_No_Medication",
+                 "UPDRS_Part_III_Left_ON", "UPDRS_Part_III_Left_OFF", "UPDRS_Part_III_Left_No_Medication",
+                 "UPDRS_Part_III_Right_ON", "UPDRS_Part_III_Right_OFF", "UPDRS_Part_III_Right_No_Medication",
+                 "UPDRS_Total_Score_ON", "UPDRS_Total_Score_OFF", "UPDRS_Total_Score_No_Medication",
+                 "Tremor_ON", "Tremor_OFF", "Tremor_No_Medication",
+                 "PIGD_ON", "PIGD_OFF", "PIGD_No_Medication",
+                 "Schwab_England", "Epworth", "GDS", "MOCA", "MOCA_adjusted", "QUIP", "RBD_Score", "Apathy_Score",
                  "SCOPA_AUT", "STAI_State", "STAI_Trait", "STAI_Total", "UPSIT_Score", 'HY_Stage',
                  "Benton_Line_Sum", "Benton_Line_Calculated_Sum", "Benton_MOANS_Age", "Benton_MOANS_Age_educ",
                  "HVLT_Total_Recall", "HVLT_Delayed_Recall", "HVLT_Retention", "HVLT_Recog_Discrim", 
@@ -229,12 +268,14 @@ PPMI_Cleaned_to_Processed <- function(folder_path) {
   
   
   # Add subtypings of PD
-  PPMI <- PPMI %>% mutate(Clinical_Features_Motor = UPDRS_Part_II + UPDRS_Part_III + PIGD) %>% relocate(Clinical_Features_Motor, .after = UPDRS_Total_Score)
+  PPMI <- PPMI %>% mutate(Clinical_Features_Motor_ON = UPDRS_Part_II + UPDRS_Part_III_ON + PIGD_ON) %>% relocate(Clinical_Features_Motor_ON, .after = UPDRS_Total_Score_No_Medication)
+  PPMI <- PPMI %>% mutate(Clinical_Features_Motor_OFF = UPDRS_Part_II + UPDRS_Part_III_OFF + PIGD_OFF) %>% relocate(Clinical_Features_Motor_OFF, .after = UPDRS_Total_Score_No_Medication)
+  PPMI <- PPMI %>% mutate(Clinical_Features_Motor_No_Medication = UPDRS_Part_II + UPDRS_Part_III_No_Medication + PIGD_No_Medication) %>% relocate(Clinical_Features_Motor_No_Medication, .after = UPDRS_Total_Score_No_Medication)
   PPMI <- PPMI %>% mutate(Clinical_Features_Cognition = MOCA_adjusted + Benton_Line_Calculated_Sum + Symbol_Digit + HVLT_Total_Recall +
                             HVLT_Delayed_Recall + HVLT_Retention + HVLT_Recog_Discrim + Semantic_Fluency + 
-                            LNS) %>% relocate(Clinical_Features_Cognition, .after = UPDRS_Total_Score)
-  PPMI <- PPMI %>% mutate(Clinical_Features_RBD = RBD_Score) %>% relocate(Clinical_Features_RBD, .after = UPDRS_Total_Score)
-  PPMI <- PPMI %>% mutate(Clinical_Features_Dysautonomia = SCOPA_AUT) %>% relocate(Clinical_Features_Dysautonomia, .after = UPDRS_Total_Score)
+                            LNS) %>% relocate(Clinical_Features_Cognition, .after = UPDRS_Total_Score_No_Medication)
+  PPMI <- PPMI %>% mutate(Clinical_Features_RBD = RBD_Score) %>% relocate(Clinical_Features_RBD, .after = UPDRS_Total_Score_No_Medication)
+  PPMI <- PPMI %>% mutate(Clinical_Features_Dysautonomia = SCOPA_AUT) %>% relocate(Clinical_Features_Dysautonomia, .after = UPDRS_Total_Score_No_Medication)
   
   
   
