@@ -79,6 +79,11 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
   
   ### Make it fully wide based on UPDRS3_State_Corrected
   PPMI <- PPMI %>% select(-Visit_Date, -Visit_Date_asDate, -isTaking_PD_Medication_Corrected, -isUnder_any_PD_Treatment)
+  # Remove duplicates by keeping only the first row for each combination
+  PPMI <- PPMI %>%
+    group_by(Patient_Number, Visit_ID, UPDRS3_State_Corrected) %>% # Group by the three variables that define unique combinations
+    slice(1) %>% # Keep only the first row within each group
+    ungroup()
   PPMI <- PPMI %>% pivot_wider(
     names_from = UPDRS3_State_Corrected,
     values_from = c("UPDRS3_Time_Between_Examination_and_LastDose",
@@ -395,9 +400,9 @@ PPMI_Wide_to_Cleaned <- function(folder_path) {
   }
   
   
-  ######## Prodromal_History_wide.csv ########
-  newFile <- read.csv("Prodromal_History_wide.csv", sep=",", header = T) %>% select(-c("Visit_ID", "Visit_Date", "Visit_Date_asDate"))
-  PPMI <- PPMI %>% left_join(newFile, by = c("Patient_Number")) %>% arrange(Patient_Number, Visit_Date_asDate)
+  # ######## Prodromal_History_wide.csv ########
+  # newFile <- read.csv("Prodromal_History_wide.csv", sep=",", header = T) %>% select(-c("Visit_ID", "Visit_Date", "Visit_Date_asDate"))
+  # PPMI <- PPMI %>% left_join(newFile, by = c("Patient_Number")) %>% arrange(Patient_Number, Visit_Date_asDate)
   
   ######## Demographics_wide.csv ########
   newFile <- read.csv("Demographics_wide.csv", sep=",", header = T) %>% select(-c("Visit_ID", "Visit_Date", "Visit_Date_asDate"))

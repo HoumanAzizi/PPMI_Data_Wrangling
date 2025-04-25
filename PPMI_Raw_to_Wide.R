@@ -573,21 +573,21 @@ PPMI_Raw_to_Wide <- function(folder_path, raw_path, download_date) {
   
   cat("\014")
   
-  ######## Prodromal_History.csv ########
-  prodromal <- read.csv(paste0(raw_path,"Prodromal_History_",download_date,".csv"), sep=",", header = T)
-  PPMI <- prodromal %>% select("PATNO","EVENT_ID","INFODT","PROSCRN","PRORBDENRL",
-                               "RBDDIAG","RBDDISYDT","RBDDIDT","RBDPSG","RBDPSSYDT","RBDPSDT","PROGENENRL",
-                               "PROHYPENRL","PRO1FAMPD","PROSYNBYP","PROPREVHYP") %>% 
-    mutate(RBDDISYDT = as.Date(paste("01/",RBDDISYDT,sep=""),"%d/%m/%Y")) %>% 
-    mutate(RBDDIDT = as.Date(paste("01/",RBDDIDT,sep=""),"%d/%m/%Y")) %>% 
-    mutate(RBDPSSYDT = as.Date(paste("01/",RBDPSSYDT,sep=""),"%d/%m/%Y")) %>% 
-    mutate(RBDPSDT = as.Date(paste("01/",RBDPSDT,sep=""),"%d/%m/%Y"))
-  colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
-  PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
-  PPMI[PPMI == ''] <- NA
-  write.csv(PPMI, "../Data_Wide/Prodromal_History_wide.csv", row.names=FALSE)
-  
-  cat("\014")
+  # ######## Prodromal_History.csv ########
+  # prodromal <- read.csv(paste0(raw_path,"Prodromal_History_",download_date,".csv"), sep=",", header = T)
+  # PPMI <- prodromal %>% select("PATNO","EVENT_ID","INFODT","PROSCRN","PRORBDENRL",
+  #                              "RBDDIAG","RBDDISYDT","RBDDIDT","RBDPSG","RBDPSSYDT","RBDPSDT","PROGENENRL",
+  #                              "PROHYPENRL","PRO1FAMPD","PROSYNBYP","PROPREVHYP") %>% 
+  #   mutate(RBDDISYDT = as.Date(paste("01/",RBDDISYDT,sep=""),"%d/%m/%Y")) %>% 
+  #   mutate(RBDDIDT = as.Date(paste("01/",RBDDIDT,sep=""),"%d/%m/%Y")) %>% 
+  #   mutate(RBDPSSYDT = as.Date(paste("01/",RBDPSSYDT,sep=""),"%d/%m/%Y")) %>% 
+  #   mutate(RBDPSDT = as.Date(paste("01/",RBDPSDT,sep=""),"%d/%m/%Y"))
+  # colnames(PPMI)[1:3] <- c("Patient_Number","Visit_ID","Visit_Date")
+  # PPMI <- PPMI %>% mutate(Visit_Date_asDate = as.Date(paste("01/",Visit_Date,sep=""),"%d/%m/%Y")) %>% relocate(Visit_Date_asDate, .after = Visit_Date) %>% arrange(Patient_Number,Visit_Date_asDate)
+  # PPMI[PPMI == ''] <- NA
+  # write.csv(PPMI, "../Data_Wide/Prodromal_History_wide.csv", row.names=FALSE)
+  # 
+  # cat("\014")
   
   # ######## AV-133_PET_Analysis.csv ######## -> files changed and not available anymore
   # pet <- read.csv(paste0(raw_path,"AV-133_PET_Analysis_",download_date,".csv"), sep=",", header = T)
